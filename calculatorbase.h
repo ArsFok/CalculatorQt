@@ -12,46 +12,52 @@ class CalculatorBase : public QWidget
     Q_OBJECT
 
 public:
-    explicit CalculatorBase(QWidget *parent = nullptr);
+    explicit CalculatorBase(QWidget *parent = nullptr, bool setupDefaultUI = true);
+    virtual ~CalculatorBase() = default;
 
 public slots:
-    void digitClicked();
-    void pointClicked();
-    void changeSignClicked();
-    void backspaceClicked();
-    void clear();
-    void clearAll();
-    void unaryOperatorClicked();
-    void doubleOperandClicked();
-    void equalClicked();
+    virtual void digitClicked();
+    virtual void pointClicked();
+    virtual void changeSignClicked();
+    virtual void backspaceClicked();
+    virtual void clear();
+    virtual void clearAll();
+    virtual void unaryOperatorClicked();
+    virtual void doubleOperandClicked();
+    virtual void equalClicked();
 
-    // Память
-    void clearMemory();
-    void readMemory();
-    void addToMemory();
-    void minToMemory();
+    virtual void clearMemory();
+    virtual void readMemory();
+    virtual void addToMemory();
+    virtual void minToMemory();
 
 protected:
+    virtual void setupUI();
     QLineEdit* createDisplay();
+    QLineEdit* createHistoryDisplay();
     MyButton* createButton(const QString &text, const char *member);
     void showOperation(const QString &operationText, double result);
     bool calculate(double operand);
+    void updateHistoryDisplay();
+    void resetHistoryDisplay();
 
     QLineEdit *m_display;
+    QLineEdit *m_historyDisplay;
     MathOperations m_mathOps;
 
     double m_sum_in_memory;
     QString m_pending_operation;
+    QString formatNumberForDisplay(double value);
     double m_stored_value;
     bool m_waiting_for_operand;
     double m_result;
     bool m_newCalculation;
+    bool m_shouldUpdateHistory;
 
     QList<CalculationNode> m_expression;
     MyButton *m_digitButtons[10];
 
-private:
-    void setupUI();
+    bool m_uiInitialized;
 };
 
 #endif // CALCULATORBASE_H

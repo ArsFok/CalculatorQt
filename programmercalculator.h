@@ -2,6 +2,9 @@
 #define PROGRAMMERCALCULATOR_H
 
 #include "calculatorbase.h"
+#include <QLineEdit>
+#include <QButtonGroup>
+#include <QRadioButton>
 
 class ProgrammerCalculator : public CalculatorBase
 {
@@ -13,12 +16,14 @@ public:
 public slots:
     void numberSystemDigitClicked();
     void bitwiseOperationClicked();
-    void updateNumberSystemDisplays();
-    void updateNumberSystemButtons();
     void onBaseGroupButtonClicked(QAbstractButton* button);
+    void leftParenClicked();
+    void rightParenClicked();
 
 private:
-    void setupUI();
+    void setupProgrammerUI();
+    void updateNumberSystemDisplays();
+    void updateNumberSystemButtons();
 
     int m_current_base;
     QLineEdit *m_display_bin;

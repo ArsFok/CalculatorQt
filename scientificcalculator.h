@@ -1,34 +1,38 @@
-#ifndef SCIENTIFICCALCULATOR_H
-#define SCIENTIFICCALCULATOR_H
+    #ifndef SCIENTIFICCALCULATOR_H
+    #define SCIENTIFICCALCULATOR_H
 
-#include "calculatorbase.h"
+    #include "calculatorbase.h"
 
-class ScientificCalculator : public CalculatorBase
-{
-    Q_OBJECT
+    class ScientificCalculator : public CalculatorBase
+    {
+        Q_OBJECT
 
-public:
-    explicit ScientificCalculator(QWidget *parent = nullptr);
+    public:
+        explicit ScientificCalculator(QWidget *parent = nullptr);
 
-public slots:
-    void sinClicked();
-    void cosClicked();
-    void tanClicked();
-    void ctanClicked();
-    void logClicked();
-    void lnClicked();
-    void factorialClicked();
-    void powerClicked();
-    void piClicked();
-    void eClicked();
-    void TenInXClicked();
-    void modulClicked();
-    void modClicked();
-    void leftParenClicked();
-    void rightParenClicked();
+    public slots:
+        void sinClicked();
+        void cosClicked();
+        void tanClicked();
+        void ctanClicked();
 
-private:
-    void setupUI();
-};
+        void logClicked();
+        void lnClicked();
 
-#endif // SCIENTIFICCALCULATOR_H
+        void factorialClicked();
+        void powerClicked();
+        void TenInXClicked();
+        void modulClicked();
+        void modClicked();
+
+        void piClicked();
+        void eClicked();
+
+        void leftParenClicked();
+        void rightParenClicked();
+
+    private:
+        void setupScientificUI();
+    };
+
+    #endif // SCIENTIFICCALCULATOR_H

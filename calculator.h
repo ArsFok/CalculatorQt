@@ -17,6 +17,7 @@ public:
 
 private slots:
     void switchPage();
+    void onStackedWidgetChanged(int index);
 
 private:
     void createNavigation();
@@ -25,6 +26,9 @@ private:
     CalculatorBase *m_basicCalculator;
     ScientificCalculator *m_scientificCalculator;
     ProgrammerCalculator *m_programmerCalculator;
+
+    QButtonGroup *m_navButtonGroup;
+    QWidget *m_navContainer;
 };
 
 #endif // CALCULATOR_H

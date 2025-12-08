@@ -1,121 +1,244 @@
 #include "scientificcalculator.h"
 #include <QGridLayout>
-#include <QFrame>
+#include <QVBoxLayout>
+#include <QDebug>
 
 ScientificCalculator::ScientificCalculator(QWidget *parent)
-    : CalculatorBase(parent)
+    : CalculatorBase(parent, false)
 {
-    setupUI();
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(10, 10, 10, 10);
+    mainLayout->setSpacing(5);
+
+    m_historyDisplay = createHistoryDisplay();
+    mainLayout->addWidget(m_historyDisplay);
+
+    m_display = createDisplay();
+    mainLayout->addWidget(m_display);
+
+    setupScientificUI();
 }
 
-void ScientificCalculator::setupUI()
+void ScientificCalculator::setupScientificUI()
 {
-    QFrame *frame = new QFrame();
-    frame->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
-    frame->setStyleSheet(
-        "QFrame {"
-        "   background: #f0f8ff;"
-        "   border: 3px solid #4682b4;"
+    qDebug() << "Setting up Scientific Calculator UI";
+
+    setStyleSheet(
+        "ScientificCalculator {"
+        "   background: #f0fff0;"
+        "   border: 3px solid #32cd32;"
         "   border-radius: 12px;"
-        "   padding: 10px;"
-        "   box-shadow: inset 0 0 10px rgba(0,0,0,0.1);"
         "}"
     );
 
-    QGridLayout *mainLayout = new QGridLayout(frame);
-    mainLayout->setSpacing(6);
-    mainLayout->setContentsMargins(12, 12, 12, 12);
+    QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(layout());
+    if (!mainLayout) {
+        qDebug() << "No main layout found";
+        return;
+    }
 
-    m_display = createDisplay();
-    mainLayout->addWidget(m_display, 0, 0, 1, 5);
+    QGridLayout *scientificLayout = new QGridLayout();
+    scientificLayout->setSpacing(5);
+    scientificLayout->setContentsMargins(5, 5, 5, 5);
 
     for(int i = 0; i < 10; ++i) {
-        m_digitButtons[i] = createButton(QString::number(i), SLOT(digitClicked()));
+        if (!m_digitButtons[i]) {
+            m_digitButtons[i] = createButton(QString::number(i), SLOT(digitClicked()));
+        }
+    }
+
+    QString scientificButtonStyle =
+        "QPushButton {"
+        "   background-color: #98fb98;"
+        "   color: black;"
+        "   border: 2px solid #32cd32;"
+        "   border-radius: 6px;"
+        "   font-size: 14px;"
+        "   font-weight: bold;"
+        "   min-width: 50px;"
+        "   min-height: 35px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #32cd32;"
+        "   color: white;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #228b22;"
+        "}";
+
+    MyButton *sinButton = createButton("sin", SLOT(sinClicked()));
+    MyButton *cosButton = createButton("cos", SLOT(cosClicked()));
+    MyButton *tanButton = createButton("tan", SLOT(tanClicked()));
+    MyButton *ctanButton = createButton("ctan", SLOT(ctanClicked()));
+    MyButton *piButton = createButton("π", SLOT(piClicked()));
+
+    MyButton *logButton = createButton("log", SLOT(logClicked()));
+    MyButton *lnButton = createButton("ln", SLOT(lnClicked()));
+    MyButton *powerButton = createButton("x^y", SLOT(powerClicked()));
+    MyButton *tenPowerButton = createButton("10^x", SLOT(TenInXClicked()));
+    MyButton *eButton = createButton("e", SLOT(eClicked()));
+
+    MyButton *factorialButton = createButton("n!", SLOT(factorialClicked()));
+    MyButton *sqrtButton = createButton("√", SLOT(unaryOperatorClicked()));
+    MyButton *squareButton = createButton("x²", SLOT(unaryOperatorClicked()));
+    MyButton *reciprocalButton = createButton("1/x", SLOT(unaryOperatorClicked()));
+    MyButton *absButton = createButton("|x|", SLOT(modulClicked()));
+
+    MyButton *leftParenButton = createButton("(", SLOT(leftParenClicked()));
+    MyButton *rightParenButton = createButton(")", SLOT(rightParenClicked()));
+    MyButton *modButton = createButton("mod", SLOT(modClicked()));
+    MyButton *percentButton = createButton("%", SLOT(unaryOperatorClicked()));
+
+    QList<MyButton*> scientificButtons = {
+        sinButton, cosButton, tanButton, ctanButton, piButton,
+        logButton, lnButton, powerButton, tenPowerButton, eButton,
+        factorialButton, sqrtButton, squareButton, reciprocalButton, absButton,
+        leftParenButton, rightParenButton, modButton, percentButton
+    };
+
+    for (MyButton *btn : scientificButtons) {
+        btn->setStyleSheet(scientificButtonStyle);
+    }
+
+    QString operationButtonStyle =
+        "QPushButton {"
+        "   background-color: #ffa500;"
+        "   color: black;"
+        "   border: 2px solid #ff8c00;"
+        "   border-radius: 6px;"
+        "   font-size: 16px;"
+        "   font-weight: bold;"
+        "   min-width: 50px;"
+        "   min-height: 35px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #ff8c00;"
+        "   color: white;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #ff7f50;"
+        "}";
+
+    MyButton *divisionButton = createButton("÷", SLOT(doubleOperandClicked()));
+    MyButton *timesButton = createButton("×", SLOT(doubleOperandClicked()));
+    MyButton *minusButton = createButton("-", SLOT(doubleOperandClicked()));
+    MyButton *plusButton = createButton("+", SLOT(doubleOperandClicked()));
+    MyButton *equalButton = createButton("=", SLOT(equalClicked()));
+
+    QList<MyButton*> operationButtons = {
+        divisionButton, timesButton, minusButton, plusButton, equalButton
+    };
+
+    for (MyButton *btn : operationButtons) {
+        btn->setStyleSheet(operationButtonStyle);
     }
 
     QString digitButtonStyle =
         "QPushButton {"
         "   background-color: #87CEEB;"
-        "   color:  black;"
-        "   border: 2px solid #45a049;"
-        "   border-radius: 5px;"
-        "   font-size: 18px;"
+        "   color: black;"
+        "   border: 2px solid #4682b4;"
+        "   border-radius: 6px;"
+        "   font-size: 16px;"
+        "   font-weight: bold;"
+        "   min-width: 50px;"
+        "   min-height: 35px;"
         "}"
         "QPushButton:hover {"
-        "   background-color: #45a049;"
+        "   background-color: #4682b4;"
+        "   color: white;"
         "}"
         "QPushButton:pressed {"
-        "   background-color: #3d8b40;"
+        "   background-color: #4169e1;"
         "}";
 
     for (int i = 0; i < 10; ++i) {
         m_digitButtons[i]->setStyleSheet(digitButtonStyle);
     }
 
-    // Первый ряд
-    mainLayout->addWidget(createButton("sin", SLOT(sinClicked())), 1, 0);
-    mainLayout->addWidget(createButton("cos", SLOT(cosClicked())), 1, 1);
-    mainLayout->addWidget(createButton("tan", SLOT(tanClicked())), 1, 2);
-    mainLayout->addWidget(createButton("ctan", SLOT(ctanClicked())), 1, 3);
-    mainLayout->addWidget(createButton("log", SLOT(logClicked())), 1, 4);
+    QString functionButtonStyle =
+        "QPushButton {"
+        "   background-color: #ffb6c1;"
+        "   color: black;"
+        "   border: 2px solid #ff69b4;"
+        "   border-radius: 6px;"
+        "   font-size: 14px;"
+        "   font-weight: bold;"
+        "   min-width: 50px;"
+        "   min-height: 35px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #ff69b4;"
+        "   color: white;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #ff1493;"
+        "}";
 
-    // Второй ряд
-    mainLayout->addWidget(createButton("x^y", SLOT(powerClicked())), 2, 0);
-    mainLayout->addWidget(createButton("π", SLOT(piClicked())), 2, 1);
-    mainLayout->addWidget(createButton("e", SLOT(eClicked())), 2, 2);
-    mainLayout->addWidget(createButton("n!", SLOT(factorialClicked())), 2, 3);
-    mainLayout->addWidget(createButton("ln", SLOT(lnClicked())), 2, 4);
+    MyButton *pointButton = createButton(".", SLOT(pointClicked()));
+    MyButton *changeSignButton = createButton("±", SLOT(changeSignClicked()));
+    MyButton *backspaceButton = createButton("⌫", SLOT(backspaceClicked()));
+    MyButton *clearButton = createButton("C", SLOT(clear()));
+    MyButton *clearAllButton = createButton("CE", SLOT(clearAll()));
 
-    // Третий ряд
-    mainLayout->addWidget(createButton("10^x", SLOT(TenInXClicked())), 3, 0);
-    mainLayout->addWidget(createButton("√", SLOT(unaryOperatorClicked())), 3, 1);
-    mainLayout->addWidget(createButton("x²", SLOT(unaryOperatorClicked())), 3, 2);
-    mainLayout->addWidget(createButton("1/x", SLOT(unaryOperatorClicked())), 3, 3);
-    mainLayout->addWidget(createButton("|x|", SLOT(modulClicked())), 3, 4);
+    QList<MyButton*> functionButtons = {
+        pointButton, changeSignButton, backspaceButton, clearButton, clearAllButton
+    };
 
-    // Четвертый ряд
-    mainLayout->addWidget(createButton("(", SLOT(leftParenClicked())), 4, 0);
-    mainLayout->addWidget(createButton(")", SLOT(rightParenClicked())), 4, 1);
-    mainLayout->addWidget(createButton("C", SLOT(clear())), 4, 2);
-    mainLayout->addWidget(createButton("CE", SLOT(clearAll())), 4, 3);
-    mainLayout->addWidget(createButton("⌫", SLOT(backspaceClicked())), 4, 4);
-
-    // Пятый ряд
-    mainLayout->addWidget(m_digitButtons[7], 5, 0);
-    mainLayout->addWidget(m_digitButtons[8], 5, 1);
-    mainLayout->addWidget(m_digitButtons[9], 5, 2);
-    mainLayout->addWidget(createButton("%", SLOT(unaryOperatorClicked())), 5, 3);
-    mainLayout->addWidget(createButton("mod", SLOT(modClicked())), 5, 4);
-
-    // Шестой ряд
-    mainLayout->addWidget(m_digitButtons[4], 6, 0);
-    mainLayout->addWidget(m_digitButtons[5], 6, 1);
-    mainLayout->addWidget(m_digitButtons[6], 6, 2);
-    mainLayout->addWidget(createButton("×", SLOT(doubleOperandClicked())), 6, 3);
-    mainLayout->addWidget(createButton("÷", SLOT(doubleOperandClicked())), 6, 4);
-
-    // Седьмой ряд
-    mainLayout->addWidget(m_digitButtons[1], 7, 0);
-    mainLayout->addWidget(m_digitButtons[2], 7, 1);
-    mainLayout->addWidget(m_digitButtons[3], 7, 2);
-    mainLayout->addWidget(createButton("+", SLOT(doubleOperandClicked())), 7, 3);
-    mainLayout->addWidget(createButton("-", SLOT(doubleOperandClicked())), 7, 4);
-
-    // Восьмой ряд
-    mainLayout->addWidget(createButton("±", SLOT(changeSignClicked())), 8, 0);
-    mainLayout->addWidget(m_digitButtons[0], 8, 1);
-    mainLayout->addWidget(createButton(".", SLOT(pointClicked())), 8, 2);
-    mainLayout->addWidget(createButton("=", SLOT(equalClicked())), 8, 3, 1, 2);
-
-    for (int i = 0; i < 9; ++i) {
-        mainLayout->setRowStretch(i, 1);
-    }
-    for (int j = 0; j < 5; ++j) {
-        mainLayout->setColumnStretch(j, 1);
+    for (MyButton *btn : functionButtons) {
+        btn->setStyleSheet(functionButtonStyle);
     }
 
-    QVBoxLayout *verticalLayout = new QVBoxLayout(this);
-    verticalLayout->addWidget(frame);
+    scientificLayout->addWidget(sinButton, 0, 0);
+    scientificLayout->addWidget(cosButton, 0, 1);
+    scientificLayout->addWidget(tanButton, 0, 2);
+    scientificLayout->addWidget(ctanButton, 0, 3);
+    scientificLayout->addWidget(piButton, 0, 4);
+
+    scientificLayout->addWidget(logButton, 1, 0);
+    scientificLayout->addWidget(lnButton, 1, 1);
+    scientificLayout->addWidget(powerButton, 1, 2);
+    scientificLayout->addWidget(tenPowerButton, 1, 3);
+    scientificLayout->addWidget(eButton, 1, 4);
+
+    scientificLayout->addWidget(factorialButton, 2, 0);
+    scientificLayout->addWidget(sqrtButton, 2, 1);
+    scientificLayout->addWidget(squareButton, 2, 2);
+    scientificLayout->addWidget(reciprocalButton, 2, 3);
+    scientificLayout->addWidget(absButton, 2, 4);
+
+    scientificLayout->addWidget(leftParenButton, 3, 0);
+    scientificLayout->addWidget(rightParenButton, 3, 1);
+    scientificLayout->addWidget(modButton, 3, 2);
+    scientificLayout->addWidget(percentButton, 3, 3);
+    scientificLayout->addWidget(divisionButton, 3, 4);
+
+    scientificLayout->addWidget(m_digitButtons[7], 4, 0);
+    scientificLayout->addWidget(m_digitButtons[8], 4, 1);
+    scientificLayout->addWidget(m_digitButtons[9], 4, 2);
+    scientificLayout->addWidget(backspaceButton, 4, 3);
+    scientificLayout->addWidget(timesButton, 4, 4);
+
+    scientificLayout->addWidget(m_digitButtons[4], 5, 0);
+    scientificLayout->addWidget(m_digitButtons[5], 5, 1);
+    scientificLayout->addWidget(m_digitButtons[6], 5, 2);
+    scientificLayout->addWidget(minusButton, 5, 4);
+    scientificLayout->addWidget(clearAllButton, 5, 3);
+
+    scientificLayout->addWidget(m_digitButtons[1], 6, 0);
+    scientificLayout->addWidget(m_digitButtons[2], 6, 1);
+    scientificLayout->addWidget(m_digitButtons[3], 6, 2);
+    scientificLayout->addWidget(clearButton, 6, 3);
+    scientificLayout->addWidget(plusButton, 6, 4);
+
+    scientificLayout->addWidget(changeSignButton, 7, 0);
+    scientificLayout->addWidget(m_digitButtons[0], 7, 1);
+    scientificLayout->addWidget(pointButton, 7, 2);
+    scientificLayout->addWidget(equalButton, 7, 3, 1, 2);
+
+    mainLayout->addLayout(scientificLayout);
+
+    qDebug() << "Scientific Calculator UI setup complete";
 }
 
 void ScientificCalculator::sinClicked()
@@ -131,8 +254,15 @@ void ScientificCalculator::sinClicked()
         m_display->setText("Error");
         return;
     }
-    m_display->setText(QString::number(result));
-    m_waiting_for_operand = true;
+    QString formattedResult = formatNumberForDisplay(result);
+    m_display->setText(formattedResult);
+
+    m_expression.clear();
+    m_expression.append({result, "", false});
+
+    updateHistoryDisplay();
+    m_waiting_for_operand = false;
+    m_newCalculation = false;
 }
 
 void ScientificCalculator::cosClicked()
@@ -148,8 +278,15 @@ void ScientificCalculator::cosClicked()
         m_display->setText("Error");
         return;
     }
-    m_display->setText(QString::number(result));
-    m_waiting_for_operand = true;
+    QString formattedResult = formatNumberForDisplay(result);
+    m_display->setText(formattedResult);
+
+    m_expression.clear();
+    m_expression.append({result, "", false});
+
+    updateHistoryDisplay();
+    m_waiting_for_operand = false;
+    m_newCalculation = false;
 }
 
 void ScientificCalculator::tanClicked()
@@ -165,8 +302,15 @@ void ScientificCalculator::tanClicked()
         m_display->setText("Error");
         return;
     }
-    m_display->setText(QString::number(result));
-    m_waiting_for_operand = true;
+    QString formattedResult = formatNumberForDisplay(result);
+    m_display->setText(formattedResult);
+
+    m_expression.clear();
+    m_expression.append({result, "", false});
+
+    updateHistoryDisplay();
+    m_waiting_for_operand = false;
+    m_newCalculation = false;
 }
 
 void ScientificCalculator::ctanClicked()
@@ -182,8 +326,15 @@ void ScientificCalculator::ctanClicked()
         m_display->setText("Error");
         return;
     }
-    m_display->setText(QString::number(result));
-    m_waiting_for_operand = true;
+    QString formattedResult = formatNumberForDisplay(result);
+    m_display->setText(formattedResult);
+
+    m_expression.clear();
+    m_expression.append({result, "", false});
+
+    updateHistoryDisplay();
+    m_waiting_for_operand = false;
+    m_newCalculation = false;
 }
 
 void ScientificCalculator::logClicked()
@@ -199,8 +350,15 @@ void ScientificCalculator::logClicked()
         m_display->setText("Error");
         return;
     }
-    m_display->setText(QString::number(result));
-    m_waiting_for_operand = true;
+    QString formattedResult = formatNumberForDisplay(result);
+    m_display->setText(formattedResult);
+
+    m_expression.clear();
+    m_expression.append({result, "", false});
+
+    updateHistoryDisplay();
+    m_waiting_for_operand = false;
+    m_newCalculation = false;
 }
 
 void ScientificCalculator::lnClicked()
@@ -216,15 +374,22 @@ void ScientificCalculator::lnClicked()
         m_display->setText("Error");
         return;
     }
-    m_display->setText(QString::number(result));
-    m_waiting_for_operand = true;
+    QString formattedResult = formatNumberForDisplay(result);
+    m_display->setText(formattedResult);
+
+    m_expression.clear();
+    m_expression.append({result, "", false});
+
+    updateHistoryDisplay();
+    m_waiting_for_operand = false;
+    m_newCalculation = false;
 }
 
 void ScientificCalculator::factorialClicked()
 {
     bool ok;
     int value = m_display->text().toInt(&ok);
-    if (!ok) {
+    if (!ok || value < 0) {
         m_display->setText("Error");
         return;
     }
@@ -233,33 +398,46 @@ void ScientificCalculator::factorialClicked()
         m_display->setText("Error");
         return;
     }
-    m_display->setText(QString::number(result));
-    m_waiting_for_operand = true;
+    QString formattedResult = formatNumberForDisplay(result);
+    m_display->setText(formattedResult);
+
+    m_expression.clear();
+    m_expression.append({result, "", false});
+
+    updateHistoryDisplay();
+    m_waiting_for_operand = false;
+    m_newCalculation = true;
 }
 
 void ScientificCalculator::powerClicked()
 {
+    QString text = m_display->text();
+    if (text.isEmpty()) {
+        text = "0";
+    }
+
     bool ok;
-    double base = m_display->text().toDouble(&ok);
+    double base = text.toDouble(&ok);
     if (!ok) {
         m_display->setText("Error");
         return;
     }
-    m_stored_value = base;
-    m_pending_operation = "^";
+
+    // Если выражение пустое или последний элемент - оператор
+    if (m_expression.isEmpty() || m_expression.last().isOperator) {
+        m_expression.append({base, "", false});
+    } else {
+        // Обновляем последнее число
+        m_expression.last().value = base;
+    }
+
+    // Добавляем оператор возведения в степень
+    m_expression.append({0.0, "^", true});
+
+    updateHistoryDisplay();
+    m_display->clear();
     m_waiting_for_operand = true;
-}
-
-void ScientificCalculator::piClicked()
-{
-    m_display->setText(QString::number(MathOperations::PI));
-    m_waiting_for_operand = false;
-}
-
-void ScientificCalculator::eClicked()
-{
-    m_display->setText(QString::number(MathOperations::E));
-    m_waiting_for_operand = false;
+    m_newCalculation = false;
 }
 
 void ScientificCalculator::TenInXClicked()
@@ -271,8 +449,15 @@ void ScientificCalculator::TenInXClicked()
         return;
     }
     double result = m_mathOps.powerOf10(exponent);
-    m_display->setText(QString::number(result));
-    m_waiting_for_operand = true;
+    QString formattedResult = formatNumberForDisplay(result);
+    m_display->setText(formattedResult);
+
+    m_expression.clear();
+    m_expression.append({result, "", false});
+
+    updateHistoryDisplay();
+    m_waiting_for_operand = false;
+    m_newCalculation = false;
 }
 
 void ScientificCalculator::modulClicked()
@@ -284,36 +469,134 @@ void ScientificCalculator::modulClicked()
         return;
     }
     double result = m_mathOps.absolute(value);
-    m_display->setText(QString::number(result));
-    m_waiting_for_operand = true;
+    QString formattedResult = formatNumberForDisplay(result);
+    m_display->setText(formattedResult);
+
+    m_expression.clear();
+    m_expression.append({result, "", false});
+
+    updateHistoryDisplay();
+    m_waiting_for_operand = false;
+    m_newCalculation = false;
 }
 
 void ScientificCalculator::modClicked()
 {
+    QString text = m_display->text();
+    if (text.isEmpty()) {
+        text = "0";
+    }
+
     bool ok;
-    double value = m_display->text().toDouble(&ok);
+    double value = text.toDouble(&ok);
     if (!ok) {
         m_display->setText("Error");
         return;
     }
-    m_stored_value = value;
-    m_pending_operation = "mod";
+
+    // Если выражение пустое или последний элемент - оператор
+    if (m_expression.isEmpty() || m_expression.last().isOperator) {
+        m_expression.append({value, "", false});
+    } else {
+        // Обновляем последнее число
+        m_expression.last().value = value;
+    }
+
+    // Добавляем оператор mod
+    m_expression.append({0.0, "mod", true});
+
+    updateHistoryDisplay();
+    m_display->clear();
     m_waiting_for_operand = true;
+    m_newCalculation = false;
+}
+
+void ScientificCalculator::piClicked()
+{
+    // ВСЕГДА начинаем новое вычисление с π
+    m_display->clear();
+    m_expression.clear();
+
+    double piValue = MathOperations::PI;
+    QString piStr = formatNumberForDisplay(piValue);
+    m_display->setText(piStr);
+
+    // Добавляем π в выражение
+    m_expression.append({piValue, "", false});
+
+    updateHistoryDisplay();
+    m_newCalculation = false;
+    m_waiting_for_operand = false;
+}
+
+void ScientificCalculator::eClicked()
+{
+    // ВСЕГДА начинаем новое вычисление с e
+    m_display->clear();
+    m_expression.clear();
+
+    double eValue = MathOperations::E;
+    QString eStr = formatNumberForDisplay(eValue);
+    m_display->setText(eStr);
+
+    // Добавляем e в выражение
+    m_expression.append({eValue, "", false});
+
+    updateHistoryDisplay();
+    m_newCalculation = false;
+    m_waiting_for_operand = false;
 }
 
 void ScientificCalculator::leftParenClicked()
 {
-    if (m_waiting_for_operand) {
-        m_display->clear();
-        m_waiting_for_operand = false;
+    qDebug() << "leftParenClicked() called";
+
+    // Если перед скобкой есть число, добавляем оператор умножения
+    if (!m_expression.isEmpty() && !m_expression.last().isOperator) {
+        m_expression.append({0.0, "×", true});
+        qDebug() << "Added multiplication before parenthesis";
     }
+
+    m_expression.append({0.0, "(", true});
     m_display->setText(m_display->text() + "(");
+    updateHistoryDisplay();
+    m_waiting_for_operand = true;
+
+    qDebug() << "Expression after (:";
+    for (int i = 0; i < m_expression.size(); ++i) {
+        if (m_expression[i].isOperator) {
+            qDebug() << i << "Operator:" << m_expression[i].operation;
+        } else {
+            qDebug() << i << "Value:" << m_expression[i].value;
+        }
+    }
 }
 
 void ScientificCalculator::rightParenClicked()
 {
-    if (m_waiting_for_operand) {
-        return;
+    qDebug() << "rightParenClicked() called";
+
+    // Если есть текущее число в дисплее, добавляем его в выражение
+    if (!m_waiting_for_operand && !m_display->text().isEmpty() && m_display->text() != "0") {
+        bool ok;
+        double currentValue = m_display->text().toDouble(&ok);
+        if (ok) {
+            m_expression.append({currentValue, "", false});
+            qDebug() << "Added current value:" << currentValue;
+        }
     }
+
+    m_expression.append({0.0, ")", true});
     m_display->setText(m_display->text() + ")");
+    updateHistoryDisplay();
+    m_waiting_for_operand = false;
+
+    qDebug() << "Expression after ):";
+    for (int i = 0; i < m_expression.size(); ++i) {
+        if (m_expression[i].isOperator) {
+            qDebug() << i << "Operator:" << m_expression[i].operation;
+        } else {
+            qDebug() << i << "Value:" << m_expression[i].value;
+        }
+    }
 }

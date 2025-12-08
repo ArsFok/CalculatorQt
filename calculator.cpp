@@ -3,9 +3,15 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QButtonGroup>
+#include <QDebug>
 
 Calculator::Calculator(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent),
+      m_stackedWidget(nullptr),
+      m_basicCalculator(nullptr),
+      m_scientificCalculator(nullptr),
+      m_programmerCalculator(nullptr),
+      m_navButtonGroup(nullptr)
 {
     setWindowFlags(windowFlags() & ~Qt::FramelessWindowHint);
     setMinimumSize(600, 800);
@@ -20,12 +26,18 @@ Calculator::Calculator(QWidget *parent)
 
     QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
+
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    mainLayout->setContentsMargins(10, 10, 10, 10);
+    mainLayout->setSpacing(10);
+
+    createNavigation();
+    mainLayout->addWidget(m_navContainer);
 
     m_stackedWidget = new QStackedWidget();
+    m_stackedWidget->setMinimumSize(580, 700);
     mainLayout->addWidget(m_stackedWidget);
 
-    // Создаем калькуляторы
     m_basicCalculator = new CalculatorBase();
     m_scientificCalculator = new ScientificCalculator();
     m_programmerCalculator = new ProgrammerCalculator();
@@ -34,30 +46,73 @@ Calculator::Calculator(QWidget *parent)
     m_stackedWidget->addWidget(m_scientificCalculator);
     m_stackedWidget->addWidget(m_programmerCalculator);
 
-    createNavigation();
+    connect(m_stackedWidget, &QStackedWidget::currentChanged,
+            this, &Calculator::onStackedWidgetChanged);
+
     m_stackedWidget->setCurrentIndex(0);
     setWindowTitle("Калькулятор");
+
+    qDebug() << "Calculator initialized. Stacked widget count:" << m_stackedWidget->count();
 }
 
 Calculator::~Calculator()
 {
+    qDebug() << "Calculator destroyed";
 }
 
 void Calculator::switchPage()
 {
     MyButton *button = qobject_cast<MyButton*>(sender());
-    if (!button) return;
+    if (!button) {
+        qDebug() << "Switch page: sender is not a MyButton";
+        return;
+    }
 
-    int pageIndex = button->property("pageIndex").toInt();
-    m_stackedWidget->setCurrentIndex(pageIndex);
+    bool ok;
+    int pageIndex = button->property("pageIndex").toInt(&ok);
+
+    if (!ok) {
+        qDebug() << "Switch page: invalid pageIndex property";
+        return;
+    }
+
+    if (pageIndex >= 0 && pageIndex < m_stackedWidget->count()) {
+        qDebug() << "Switching to page:" << pageIndex;
+        m_stackedWidget->setCurrentIndex(pageIndex);
+
+        m_stackedWidget->update();
+        update();
+    } else {
+        qDebug() << "Invalid page index:" << pageIndex << "max:" << m_stackedWidget->count() - 1;
+    }
+}
+
+void Calculator::onStackedWidgetChanged(int index)
+{
+    qDebug() << "Stacked widget changed to index:" << index;
+
+    if (m_navButtonGroup) {
+        QAbstractButton *button = m_navButtonGroup->button(index);
+        if (button) {
+            button->setChecked(true);
+            qDebug() << "Set button" << index << "to checked";
+        }
+    }
+
+    update();
 }
 
 void Calculator::createNavigation()
 {
-    QWidget *navContainer = new QWidget();
-    QHBoxLayout *navLayout = new QHBoxLayout(navContainer);
-    navLayout->setContentsMargins(5, 5, 5, 5);
-    navLayout->setSpacing(10);
+    m_navContainer = new QWidget();
+    m_navContainer->setFixedHeight(50);
+
+    QHBoxLayout *navLayout = new QHBoxLayout(m_navContainer);
+    navLayout->setContentsMargins(0, 0, 0, 0);
+    navLayout->setSpacing(5);
+
+    m_navButtonGroup = new QButtonGroup(this);
+    m_navButtonGroup->setExclusive(true);
 
     QVector<QPair<QString, int>> modes = {
         {"Обычный", 0},
@@ -65,43 +120,46 @@ void Calculator::createNavigation()
         {"Программист", 2}
     };
 
-    QButtonGroup *modeGroup = new QButtonGroup(this);
-    modeGroup->setExclusive(true);
-
     for (const auto& mode : modes) {
         MyButton *btn = new MyButton(mode.first);
+        btn->setFixedSize(150, 40);
         connect(btn, &MyButton::clicked, this, &Calculator::switchPage);
         btn->setProperty("pageIndex", mode.second);
         btn->setCheckable(true);
-        modeGroup->addButton(btn);
+        m_navButtonGroup->addButton(btn, mode.second);
         navLayout->addWidget(btn);
+
+        qDebug() << "Created button:" << mode.first << "with pageIndex:" << mode.second;
     }
 
-    if (!modeGroup->buttons().isEmpty()) {
-        modeGroup->buttons().at(0)->setChecked(true);
-    }
-
-    QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(centralWidget()->layout());
-    if (mainLayout) {
-        mainLayout->insertWidget(0, navContainer);
+    if (!m_navButtonGroup->buttons().isEmpty()) {
+        m_navButtonGroup->button(0)->setChecked(true);
+        qDebug() << "Set initial button to checked";
     }
 
     QString buttonStyle =
         "QPushButton {"
-        "   background-color: #f0f0f0;"
-        "   border: 1px solid #ccc;"
-        "   padding: 5px 10px;"
-        "   border-radius: 4px;"
+        "   background-color: #e0e0e0;"
+        "   border: 2px solid #a0a0a0;"
+        "   border-radius: 8px;"
+        "   padding: 8px;"
+        "   font-size: 14px;"
+        "   font-weight: normal;"
         "}"
         "QPushButton:checked {"
-        "   background-color: #d0d0ff;"
+        "   background-color: #87CEEB;"
+        "   border: 2px solid #4682b4;"
         "   font-weight: bold;"
+        "   color: black;"
         "}"
         "QPushButton:hover {"
-        "   background-color: #e0e0e0;"
+        "   background-color: #d0d0d0;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #c0c0c0;"
         "}";
 
-    const auto buttons = modeGroup->buttons();
+    const auto buttons = m_navButtonGroup->buttons();
     for (QAbstractButton *btn : buttons) {
         btn->setStyleSheet(buttonStyle);
     }

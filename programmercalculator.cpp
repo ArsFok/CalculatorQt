@@ -1,16 +1,14 @@
 #include "programmercalculator.h"
 #include <QGridLayout>
-#include <QFrame>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QButtonGroup>
 #include <QRadioButton>
 #include <QDebug>
-#include <QToolTip>
 
 ProgrammerCalculator::ProgrammerCalculator(QWidget *parent)
-    : CalculatorBase(parent),
+    : CalculatorBase(parent, false),
       m_current_base(10),
       m_display_bin(nullptr),
       m_display_oct(nullptr),
@@ -23,68 +21,74 @@ ProgrammerCalculator::ProgrammerCalculator(QWidget *parent)
       m_buttonE(nullptr),
       m_buttonF(nullptr)
 {
-    setupUI();
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(10, 10, 10, 10);
+    mainLayout->setSpacing(5);
+
+    m_historyDisplay = createHistoryDisplay();
+    mainLayout->addWidget(m_historyDisplay);
+    m_display = createDisplay();
+    mainLayout->addWidget(m_display);
+
+    setupProgrammerUI();
 }
 
-void ProgrammerCalculator::setupUI()
+void ProgrammerCalculator::setupProgrammerUI()
 {
-    QFrame *frame = new QFrame();
-    frame->setFrameStyle(QFrame::Box | QFrame::Plain);
-    frame->setStyleSheet(
-        "QFrame {"
-        "   background: #f0f8ff;"
-        "   border: 3px solid #4682b4;"
+    qDebug() << "Setting up Programmer Calculator UI";
+
+    QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(layout());
+    if (!mainLayout) {
+        qDebug() << "Failed to get main layout in ProgrammerCalculator";
+        return;
+    }
+
+    setStyleSheet(
+        "ProgrammerCalculator {"
+        "   background: #fff0f5;"
+        "   border: 3px solid #db7093;"
         "   border-radius: 12px;"
-        "   padding: 10px;"
-        "   box-shadow: inset 0 0 10px rgba(0,0,0,0.1);"
         "}"
     );
 
-    QGridLayout *layout = new QGridLayout(frame);
-    layout->setSpacing(6);
-    layout->setContentsMargins(8, 8, 8, 8);
-
-    // Создаем дисплеи для систем счисления
-    QVBoxLayout *displayLayout = new QVBoxLayout();
+    QGridLayout *displaysLayout = new QGridLayout();
+    displaysLayout->setSpacing(5);
 
     QLabel *binLabel = new QLabel("BIN:");
+    binLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
     m_display_bin = createDisplay();
-    m_display_bin->setStyleSheet("font-size: 20px;");
-    displayLayout->addWidget(binLabel);
-    displayLayout->addWidget(m_display_bin);
+    m_display_bin->setStyleSheet("font-size: 16px; background-color: #f5f5f5; padding: 5px;");
+    m_display_bin->setReadOnly(true);
 
     QLabel *octLabel = new QLabel("OCT:");
+    octLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
     m_display_oct = createDisplay();
-    m_display_oct->setStyleSheet("font-size: 20px;");
-    displayLayout->addWidget(octLabel);
-    displayLayout->addWidget(m_display_oct);
+    m_display_oct->setStyleSheet("font-size: 16px; background-color: #f5f5f5; padding: 5px;");
+    m_display_oct->setReadOnly(true);
 
     QLabel *decLabel = new QLabel("DEC:");
+    decLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
     m_display_dec = createDisplay();
-    m_display_dec->setStyleSheet("font-size: 20px;");
-    displayLayout->addWidget(decLabel);
-    displayLayout->addWidget(m_display_dec);
+    m_display_dec->setStyleSheet("font-size: 16px; background-color: #f5f5f5; padding: 5px;");
+    m_display_dec->setReadOnly(true);
 
     QLabel *hexLabel = new QLabel("HEX:");
+    hexLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
     m_display_hex = createDisplay();
-    m_display_hex->setStyleSheet("font-size: 20px;");
-    displayLayout->addWidget(hexLabel);
-    displayLayout->addWidget(m_display_hex);
+    m_display_hex->setStyleSheet("font-size: 16px; background-color: #f5f5f5; padding: 5px;");
+    m_display_hex->setReadOnly(true);
 
-    layout->addLayout(displayLayout, 0, 0, 1, 5);
+    displaysLayout->addWidget(binLabel, 0, 0);
+    displaysLayout->addWidget(m_display_bin, 0, 1);
+    displaysLayout->addWidget(octLabel, 1, 0);
+    displaysLayout->addWidget(m_display_oct, 1, 1);
+    displaysLayout->addWidget(decLabel, 2, 0);
+    displaysLayout->addWidget(m_display_dec, 2, 1);
+    displaysLayout->addWidget(hexLabel, 3, 0);
+    displaysLayout->addWidget(m_display_hex, 3, 1);
 
-    // Основной дисплей
-    m_display = createDisplay();
-    layout->addWidget(m_display, 1, 0, 1, 5);
+    mainLayout->addLayout(displaysLayout);
 
-    // Кнопки управления
-    layout->addWidget(createButton("C", SLOT(clear())), 2, 0);
-    layout->addWidget(createButton("CE", SLOT(clearAll())), 2, 1);
-    layout->addWidget(createButton("⌫", SLOT(backspaceClicked())), 2, 2);
-    layout->addWidget(createButton("±", SLOT(changeSignClicked())), 2, 3);
-    layout->addWidget(createButton("=", SLOT(equalClicked())), 2, 4);
-
-    // Радио-кнопки для выбора системы счисления
     QButtonGroup *baseGroup = new QButtonGroup(this);
     QRadioButton *binRadio = new QRadioButton("BIN");
     QRadioButton *octRadio = new QRadioButton("OCT");
@@ -108,16 +112,20 @@ void ProgrammerCalculator::setupUI()
     baseLayout->addWidget(octRadio);
     baseLayout->addWidget(decRadio);
     baseLayout->addWidget(hexRadio);
-    layout->addLayout(baseLayout, 3, 0, 1, 5);
+    baseLayout->addStretch();
 
-    // Создаем цифровые кнопки (0-F)
-    for (int i = 0; i < 16; ++i) {
-        QString text = QString::number(i, 16).toUpper();
-        m_digitButtons[i] = createButton(text, SLOT(numberSystemDigitClicked()));
-        m_digitButtons[i]->setEnabled(i < 10); // По умолчанию только 0-9
+    mainLayout->addLayout(baseLayout);
+
+    QGridLayout *programmerLayout = new QGridLayout();
+    programmerLayout->setSpacing(5);
+    programmerLayout->setContentsMargins(10, 10, 10, 10);
+
+    for(int i = 0; i < 10; ++i) {
+        if (!m_digitButtons[i]) {
+            m_digitButtons[i] = createButton(QString::number(i), SLOT(numberSystemDigitClicked()));
+        }
     }
 
-    // Создаем буквенные кнопки для HEX
     m_buttonA = createButton("A", SLOT(numberSystemDigitClicked()));
     m_buttonB = createButton("B", SLOT(numberSystemDigitClicked()));
     m_buttonC = createButton("C", SLOT(numberSystemDigitClicked()));
@@ -125,7 +133,6 @@ void ProgrammerCalculator::setupUI()
     m_buttonE = createButton("E", SLOT(numberSystemDigitClicked()));
     m_buttonF = createButton("F", SLOT(numberSystemDigitClicked()));
 
-    // Изначально отключаем буквенные кнопки
     m_buttonA->setEnabled(false);
     m_buttonB->setEnabled(false);
     m_buttonC->setEnabled(false);
@@ -133,19 +140,38 @@ void ProgrammerCalculator::setupUI()
     m_buttonE->setEnabled(false);
     m_buttonF->setEnabled(false);
 
+    MyButton *leftParenButton = createButton("(", SLOT(leftParenClicked()));
+    MyButton *rightParenButton = createButton(")", SLOT(rightParenClicked()));
+    MyButton *percentButton = createButton("%", SLOT(unaryOperatorClicked()));
+    MyButton *divisionButton = createButton("/", SLOT(doubleOperandClicked()));
+    MyButton *timesButton = createButton("*", SLOT(doubleOperandClicked()));
+    MyButton *minusButton = createButton("-", SLOT(doubleOperandClicked()));
+    MyButton *plusButton = createButton("+", SLOT(doubleOperandClicked()));
+    MyButton *equalButton = createButton("=", SLOT(equalClicked()));
+    MyButton *pointButton = createButton(",", SLOT(pointClicked()));
+    MyButton *changeSignButton = createButton("+/-", SLOT(changeSignClicked()));
+
+    MyButton *clearAllButton = createButton("CE", SLOT(clearAll()));
+    MyButton *clearButton = createButton("C", SLOT(clear()));
+    MyButton *backspaceButton = createButton("⌫", SLOT(backspaceClicked()));
+
     QString digitButtonStyle =
         "QPushButton {"
         "   background-color: #87CEEB;"
-        "   color:  black;"
-        "   border: 2px solid #45a049;"
-        "   border-radius: 5px;"
-        "   font-size: 18px;"
+        "   color: black;"
+        "   border: 2px solid #4682b4;"
+        "   border-radius: 6px;"
+        "   font-size: 16px;"
+        "   font-weight: bold;"
+        "   min-width: 45px;"
+        "   min-height: 35px;"
         "}"
         "QPushButton:hover {"
-        "   background-color: #45a049;"
+        "   background-color: #4682b4;"
+        "   color: white;"
         "}"
         "QPushButton:pressed {"
-        "   background-color: #3d8b40;"
+        "   background-color: #4169e1;"
         "}"
         "QPushButton:disabled {"
         "   background-color: #cccccc;"
@@ -153,65 +179,136 @@ void ProgrammerCalculator::setupUI()
         "   border: 2px solid #999999;"
         "}";
 
+    QString hexButtonStyle = digitButtonStyle;
+
+    QString operationButtonStyle =
+        "QPushButton {"
+        "   background-color: #ffa500;"
+        "   color: black;"
+        "   border: 2px solid #ff8c00;"
+        "   border-radius: 6px;"
+        "   font-size: 14px;"
+        "   font-weight: bold;"
+        "   min-width: 45px;"
+        "   min-height: 35px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #ff8c00;"
+        "   color: white;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #ff7f50;"
+        "}";
+
+    QString functionButtonStyle =
+        "QPushButton {"
+        "   background-color: #ffb6c1;"
+        "   color: black;"
+        "   border: 2px solid #ff69b4;"
+        "   border-radius: 6px;"
+        "   font-size: 14px;"
+        "   font-weight: bold;"
+        "   min-width: 45px;"
+        "   min-height: 35px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #ff69b4;"
+        "   color: white;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #ff1493;"
+        "}";
+
     for (int i = 0; i < 10; ++i) {
         m_digitButtons[i]->setStyleSheet(digitButtonStyle);
     }
 
-    m_buttonA->setStyleSheet(digitButtonStyle);
-    m_buttonB->setStyleSheet(digitButtonStyle);
-    m_buttonC->setStyleSheet(digitButtonStyle);
-    m_buttonD->setStyleSheet(digitButtonStyle);
-    m_buttonE->setStyleSheet(digitButtonStyle);
-    m_buttonF->setStyleSheet(digitButtonStyle);
+    m_buttonA->setStyleSheet(hexButtonStyle);
+    m_buttonB->setStyleSheet(hexButtonStyle);
+    m_buttonC->setStyleSheet(hexButtonStyle);
+    m_buttonD->setStyleSheet(hexButtonStyle);
+    m_buttonE->setStyleSheet(hexButtonStyle);
+    m_buttonF->setStyleSheet(hexButtonStyle);
 
-    // Размещение кнопок
-    // Первый ряд цифр
-    layout->addWidget(m_digitButtons[7], 4, 1);
-    layout->addWidget(m_digitButtons[8], 4, 2);
-    layout->addWidget(m_digitButtons[9], 4, 3);
-    layout->addWidget(createButton("AND", SLOT(bitwiseOperationClicked())), 4, 4);
+    QList<MyButton*> operationButtons = {
+        divisionButton, timesButton, minusButton, plusButton, equalButton,
+        percentButton
+    };
+    for (MyButton *btn : operationButtons) {
+        btn->setStyleSheet(operationButtonStyle);
+    }
 
-    // Второй ряд цифр
-    layout->addWidget(m_digitButtons[4], 5, 1);
-    layout->addWidget(m_digitButtons[5], 5, 2);
-    layout->addWidget(m_digitButtons[6], 5, 3);
-    layout->addWidget(createButton("OR", SLOT(bitwiseOperationClicked())), 5, 4);
+    QList<MyButton*> functionButtons = {
+        clearAllButton, clearButton, backspaceButton, changeSignButton,
+        leftParenButton, rightParenButton, pointButton
+    };
+    for (MyButton *btn : functionButtons) {
+        btn->setStyleSheet(functionButtonStyle);
+    }
 
-    // Третий ряд цифр
-    layout->addWidget(m_digitButtons[1], 6, 1);
-    layout->addWidget(m_digitButtons[2], 6, 2);
-    layout->addWidget(m_digitButtons[3], 6, 3);
-    layout->addWidget(createButton("XOR", SLOT(bitwiseOperationClicked())), 6, 4);
+    programmerLayout->addWidget(m_buttonA, 0, 0);
+    programmerLayout->addWidget(clearAllButton, 0, 1);
+    programmerLayout->addWidget(clearButton, 0, 2);
+    programmerLayout->addWidget(backspaceButton, 0, 3, 1, 2);
 
-    // Четвертый ряд цифр
-    layout->addWidget(m_digitButtons[0], 7, 3);
-    layout->addWidget(createButton("NOT", SLOT(bitwiseOperationClicked())), 7, 4);
+    programmerLayout->addWidget(m_buttonB, 1, 0);
+    programmerLayout->addWidget(leftParenButton, 1, 1);
+    programmerLayout->addWidget(rightParenButton, 1, 2);
+    programmerLayout->addWidget(percentButton, 1, 3);
+    programmerLayout->addWidget(divisionButton, 1, 4);
 
-    // Буквенные кнопки (A-F)
-    layout->addWidget(m_buttonA, 4, 0);
-    layout->addWidget(m_buttonB, 5, 0);
-    layout->addWidget(m_buttonC, 6, 0);
-    layout->addWidget(m_buttonD, 7, 0);
-    layout->addWidget(m_buttonE, 7, 1);
-    layout->addWidget(m_buttonF, 7, 2);
+    programmerLayout->addWidget(m_buttonC, 2, 0);
+    programmerLayout->addWidget(m_digitButtons[7], 2, 1);
+    programmerLayout->addWidget(m_digitButtons[8], 2, 2);
+    programmerLayout->addWidget(m_digitButtons[9], 2, 3);
+    programmerLayout->addWidget(timesButton, 2, 4);
 
-    // Добавляем tooltip'ы
-    m_buttonA->setToolTip("Шестнадцатеричная цифра A (10 в десятичной)");
-    m_buttonB->setToolTip("Шестнадцатеричная цифра B (11 в десятичной)");
-    m_buttonC->setToolTip("Шестнадцатеричная цифра C (12 в десятичной)");
-    m_buttonD->setToolTip("Шестнадцатеричная цифра D (13 в десятичной)");
-    m_buttonE->setToolTip("Шестнадцатеричная цифра E (14 в десятичной)");
-    m_buttonF->setToolTip("Шестнадцатеричная цифра F (15 в десятичной)");
+    programmerLayout->addWidget(m_buttonD, 3, 0);
+    programmerLayout->addWidget(m_digitButtons[4], 3, 1);
+    programmerLayout->addWidget(m_digitButtons[5], 3, 2);
+    programmerLayout->addWidget(m_digitButtons[6], 3, 3);
+    programmerLayout->addWidget(minusButton, 3, 4);
 
-    // Исправленное подключение - используем старый стиль connect
+    programmerLayout->addWidget(m_buttonE, 4, 0);
+    programmerLayout->addWidget(m_digitButtons[1], 4, 1);
+    programmerLayout->addWidget(m_digitButtons[2], 4, 2);
+    programmerLayout->addWidget(m_digitButtons[3], 4, 3);
+    programmerLayout->addWidget(plusButton, 4, 4);
+
+    programmerLayout->addWidget(m_buttonF, 5, 0);
+    programmerLayout->addWidget(changeSignButton, 5, 1);
+    programmerLayout->addWidget(m_digitButtons[0], 5, 2);
+    programmerLayout->addWidget(pointButton, 5, 3);
+    programmerLayout->addWidget(equalButton, 5, 4);
+
+    mainLayout->addLayout(programmerLayout);
+
     connect(baseGroup, SIGNAL(buttonClicked(QAbstractButton*)),
             this, SLOT(onBaseGroupButtonClicked(QAbstractButton*)));
 
-    QVBoxLayout *verticalLayout = new QVBoxLayout(this);
-    verticalLayout->addWidget(frame);
+    updateNumberSystemDisplays();
+    updateNumberSystemButtons();
+
+    qDebug() << "Programmer Calculator UI setup complete";
 }
 
-// Добавляем слот для обработки кликов по радио-кнопкам
+void ProgrammerCalculator::leftParenClicked()
+{
+    if (m_waiting_for_operand) {
+        m_display->clear();
+        m_waiting_for_operand = false;
+    }
+    m_display->setText(m_display->text() + "(");
+}
+
+void ProgrammerCalculator::rightParenClicked()
+{
+    if (m_waiting_for_operand) {
+        return;
+    }
+    m_display->setText(m_display->text() + ")");
+}
+
 void ProgrammerCalculator::onBaseGroupButtonClicked(QAbstractButton* button)
 {
     if (!button) return;
@@ -219,28 +316,14 @@ void ProgrammerCalculator::onBaseGroupButtonClicked(QAbstractButton* button)
     int newBase = button->property("base").toInt();
     qDebug() << "Switching to base:" << newBase;
 
-    if (newBase != 2 && newBase != 8 && newBase != 10 && newBase != 16) {
-        qDebug() << "Invalid base:" << newBase;
-        return;
-    }
-
     m_current_base = newBase;
 
-    // Конвертируем текущее значение
-    bool ok;
-    QString currentText = m_display->text();
-    long value = currentText.toLong(&ok, m_current_base);
-
-    if (!ok) {
-        qDebug() << "Conversion error for:" << currentText;
-        value = 0;
-    }
+    m_display->setText("0");
+    m_historyDisplay->setText("0");
+    m_waiting_for_operand = true;
+    m_newCalculation = true;
 
     updateNumberSystemButtons();
-    m_display->setText(QString::number(value, m_current_base).toUpper());
-    m_waiting_for_operand = false;
-    m_newCalculation = false;
-
     updateNumberSystemDisplays();
 }
 
@@ -251,7 +334,6 @@ void ProgrammerCalculator::numberSystemDigitClicked()
 
     QString digit = clickedButton->text().toUpper();
 
-    // Проверка допустимости цифры для текущей системы счисления
     bool isDigitValid = false;
     if (m_current_base <= 10) {
         isDigitValid = digit[0].isDigit() && digit.toInt(nullptr, m_current_base) < m_current_base;
@@ -265,9 +347,10 @@ void ProgrammerCalculator::numberSystemDigitClicked()
     }
 
     QString currentText = m_display->text();
-    if (currentText == "0" || m_waiting_for_operand) {
+    if (currentText == "0" || m_waiting_for_operand || m_newCalculation) {
         currentText = digit;
         m_waiting_for_operand = false;
+        m_newCalculation = false;
     } else {
         currentText += digit;
     }
@@ -315,11 +398,30 @@ void ProgrammerCalculator::updateNumberSystemDisplays()
     QString input = m_display->text();
     qDebug() << "Обновление отображений для числа:" << input;
 
+    if (input.isEmpty() || input == "Error") {
+        if (m_display_bin) m_display_bin->setText("0");
+        if (m_display_oct) m_display_oct->setText("0");
+        if (m_display_dec) m_display_dec->setText("0");
+        if (m_display_hex) m_display_hex->setText("0");
+        return;
+    }
+
     bool ok;
-    long num = input.toLong(&ok, m_current_base);
+    long long num = 0;
+
+    if (input.startsWith("-")) {
+        // Отрицательное число
+        QString absInput = input.mid(1);
+        num = absInput.toLongLong(&ok, m_current_base);
+        if (ok) {
+            num = -num;
+        }
+    } else {
+        num = input.toLongLong(&ok, m_current_base);
+    }
 
     if (!ok) {
-        qDebug() << "Ошибка преобразования числа";
+        qDebug() << "Ошибка преобразования числа:" << input;
         if (m_display_bin) m_display_bin->setText("Error");
         if (m_display_oct) m_display_oct->setText("Error");
         if (m_display_dec) m_display_dec->setText("Error");
@@ -327,27 +429,35 @@ void ProgrammerCalculator::updateNumberSystemDisplays()
         return;
     }
 
-    // Проверка на переполнение
-    if (num < 0 || num > std::numeric_limits<long>::max()) {
-        qDebug() << "Число вне допустимого диапазона";
-        if (m_display_bin) m_display_bin->setText("Overflow");
-        if (m_display_oct) m_display_oct->setText("Overflow");
-        if (m_display_dec) m_display_dec->setText("Overflow");
-        if (m_display_hex) m_display_hex->setText("Overflow");
-        return;
-    }
+    // Для отрицательных чисел используем дополнительный код
+    if (num < 0) {
+        unsigned long long unsignedNum;
 
-    if (m_display_bin) m_display_bin->setText(QString::number(num, 2));
-    if (m_display_oct) m_display_oct->setText(QString::number(num, 8));
-    if (m_display_dec) m_display_dec->setText(QString::number(num, 10));
-    if (m_display_hex) m_display_hex->setText(QString::number(num, 16).toUpper());
+        if (m_current_base == 2) {
+            // Для двоичной системы - 32-битное представление
+            unsignedNum = static_cast<unsigned int>(static_cast<int>(num));
+            if (m_display_bin) m_display_bin->setText(QString::number(unsignedNum, 2).rightJustified(32, '0'));
+        } else {
+            unsignedNum = static_cast<unsigned long long>(num);
+            if (m_display_bin) m_display_bin->setText(QString::number(unsignedNum, 2));
+        }
+
+        if (m_display_oct) m_display_oct->setText(QString::number(unsignedNum, 8));
+        if (m_display_dec) m_display_dec->setText(QString::number(num, 10));
+        if (m_display_hex) m_display_hex->setText(QString::number(unsignedNum, 16).toUpper());
+    } else {
+        // Положительные числа
+        if (m_display_bin) m_display_bin->setText(QString::number(num, 2));
+        if (m_display_oct) m_display_oct->setText(QString::number(num, 8));
+        if (m_display_dec) m_display_dec->setText(QString::number(num, 10));
+        if (m_display_hex) m_display_hex->setText(QString::number(num, 16).toUpper());
+    }
 }
 
 void ProgrammerCalculator::updateNumberSystemButtons()
 {
     bool hexMode = (m_current_base == 16);
 
-    // Включение буквенных кнопок
     if (m_buttonA) m_buttonA->setEnabled(hexMode);
     if (m_buttonB) m_buttonB->setEnabled(hexMode);
     if (m_buttonC) m_buttonC->setEnabled(hexMode);
@@ -355,7 +465,6 @@ void ProgrammerCalculator::updateNumberSystemButtons()
     if (m_buttonE) m_buttonE->setEnabled(hexMode);
     if (m_buttonF) m_buttonF->setEnabled(hexMode);
 
-    // Включение цифровых кнопок
     for (int i = 0; i < 10; ++i) {
         if (m_digitButtons[i]) {
             m_digitButtons[i]->setEnabled(i < m_current_base);

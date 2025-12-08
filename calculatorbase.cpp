@@ -1,8 +1,9 @@
 #include "calculatorbase.h"
 #include <QGridLayout>
-#include <QFrame>
+#include <QVBoxLayout>
+#include <QDebug>
 
-CalculatorBase::CalculatorBase(QWidget *parent)
+CalculatorBase::CalculatorBase(QWidget *parent, bool setupDefaultUI)
     : QWidget(parent),
       m_mathOps(this),
       m_sum_in_memory(0.0),
@@ -10,32 +11,49 @@ CalculatorBase::CalculatorBase(QWidget *parent)
       m_stored_value(0.0),
       m_waiting_for_operand(true),
       m_result(0.0),
-      m_newCalculation(true)
+      m_newCalculation(true),
+      m_shouldUpdateHistory(false),
+      m_uiInitialized(false)
 {
-    setupUI();
+    for (int i = 0; i < 10; ++i) {
+        m_digitButtons[i] = nullptr;
+    }
+
+    if (setupDefaultUI) {
+        setupUI();
+    }
 }
 
 void CalculatorBase::setupUI()
 {
-    QFrame *frame = new QFrame();
-    frame->setFrameStyle(QFrame::StyledPanel | QFrame::Raised);
-    frame->setLineWidth(2);
-    frame->setStyleSheet(
-         "QFrame {"
-         "   background: #f0f8ff;"
-         "   border: 3px solid #4682b4;"
-         "   border-radius: 12px;"
-         "   padding: 10px;"
-         "   box-shadow: inset 0 0 10px rgba(0,0,0,0.1);"
-         "}"
+    if (m_uiInitialized) {
+        qDebug() << "UI already initialized for CalculatorBase";
+        return;
+    }
+
+    m_uiInitialized = true;
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(10, 10, 10, 10);
+    mainLayout->setSpacing(0);
+
+    setStyleSheet(
+        "CalculatorBase {"
+        "   background: #f0f8ff;"
+        "   border: 3px solid #4682b4;"
+        "   border-radius: 12px;"
+        "}"
     );
 
-    QGridLayout *layout = new QGridLayout(frame);
-    layout->setSpacing(8);
-    layout->setContentsMargins(10, 10, 10, 10);
+    m_historyDisplay = createHistoryDisplay();
+    mainLayout->addWidget(m_historyDisplay);
 
     m_display = createDisplay();
-    layout->addWidget(m_display, 0, 0, 1, 4);
+    mainLayout->addWidget(m_display);
+
+    QGridLayout *buttonsLayout = new QGridLayout();
+    buttonsLayout->setSpacing(6);
+    buttonsLayout->setContentsMargins(15, 15, 15, 15);
 
     for(int i = 0; i < 10; ++i) {
         m_digitButtons[i] = createButton(QString::number(i), SLOT(digitClicked()));
@@ -44,16 +62,58 @@ void CalculatorBase::setupUI()
     QString digitButtonStyle =
         "QPushButton {"
         "   background-color: #87CEEB;"
-        "   color:  black;"
+        "   color: black;"
         "   border: 2px solid #45a049;"
-        "   border-radius: 5px;"
+        "   border-radius: 8px;"
         "   font-size: 18px;"
+        "   font-weight: bold;"
+        "   min-width: 60px;"
+        "   min-height: 50px;"
         "}"
         "QPushButton:hover {"
         "   background-color: #45a049;"
+        "   color: white;"
         "}"
         "QPushButton:pressed {"
         "   background-color: #3d8b40;"
+        "}";
+
+    QString functionButtonStyle =
+        "QPushButton {"
+        "   background-color: #ffb6c1;"
+        "   color: black;"
+        "   border: 2px solid #ff69b4;"
+        "   border-radius: 8px;"
+        "   font-size: 16px;"
+        "   font-weight: bold;"
+        "   min-width: 60px;"
+        "   min-height: 50px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #ff69b4;"
+        "   color: white;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #ff1493;"
+        "}";
+
+    QString operationButtonStyle =
+        "QPushButton {"
+        "   background-color: #ffa500;"
+        "   color: black;"
+        "   border: 2px solid #ff8c00;"
+        "   border-radius: 8px;"
+        "   font-size: 18px;"
+        "   font-weight: bold;"
+        "   min-width: 60px;"
+        "   min-height: 50px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #ff8c00;"
+        "   color: white;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #ff7f50;"
         "}";
 
     for (int i = 0; i < 10; ++i) {
@@ -82,69 +142,110 @@ void CalculatorBase::setupUI()
     MyButton *addToMemoryButton = createButton("M+", SLOT(addToMemory()));
     MyButton *minToMemoryButton = createButton("M-", SLOT(minToMemory()));
 
-    // Размещение кнопок памяти
-    layout->addWidget(clearMemoryButton, 1, 0);
-    layout->addWidget(readMemoryButton, 1, 1);
-    layout->addWidget(addToMemoryButton, 1, 2);
-    layout->addWidget(minToMemoryButton, 1, 3);
+    QList<MyButton*> functionButtons = {
+        percentButton, pointButton, changeSignButton, backspaceButton,
+        clearButton, clearAllButton, squareButton, powerButton, reciprocalButton,
+        clearMemoryButton, readMemoryButton, addToMemoryButton, minToMemoryButton
+    };
 
-    // Второй ряд
-    layout->addWidget(percentButton, 2, 0);
-    layout->addWidget(clearButton, 2, 2);
-    layout->addWidget(clearAllButton, 2, 1);
-    layout->addWidget(backspaceButton, 2, 3);
+    for (MyButton *btn : functionButtons) {
+        btn->setStyleSheet(functionButtonStyle);
+    }
 
-    // Третий ряд
-    layout->addWidget(squareButton, 3, 0);
-    layout->addWidget(powerButton, 3, 1);
-    layout->addWidget(reciprocalButton, 3, 2);
-    layout->addWidget(divisionButton, 3, 3);
+    QList<MyButton*> operationButtons = {
+        divisionButton, timesButton, minusButton, plusButton, equalButton
+    };
 
-    // Четвертый ряд
-    layout->addWidget(m_digitButtons[7], 4, 0);
-    layout->addWidget(m_digitButtons[8], 4, 1);
-    layout->addWidget(m_digitButtons[9], 4, 2);
-    layout->addWidget(timesButton, 4, 3);
+    for (MyButton *btn : operationButtons) {
+        btn->setStyleSheet(operationButtonStyle);
+    }
 
-    // Пятый ряд
-    layout->addWidget(m_digitButtons[4], 5, 0);
-    layout->addWidget(m_digitButtons[5], 5, 1);
-    layout->addWidget(m_digitButtons[6], 5, 2);
-    layout->addWidget(minusButton, 5, 3);
+    buttonsLayout->addWidget(clearMemoryButton, 0, 0);
+    buttonsLayout->addWidget(readMemoryButton, 0, 1);
+    buttonsLayout->addWidget(addToMemoryButton, 0, 2);
+    buttonsLayout->addWidget(minToMemoryButton, 0, 3);
 
-    // Шестой ряд
-    layout->addWidget(m_digitButtons[1], 6, 0);
-    layout->addWidget(m_digitButtons[2], 6, 1);
-    layout->addWidget(m_digitButtons[3], 6, 2);
-    layout->addWidget(plusButton, 6, 3);
+    buttonsLayout->addWidget(percentButton, 1, 0);
+    buttonsLayout->addWidget(clearAllButton, 1, 1);
+    buttonsLayout->addWidget(clearButton, 1, 2);
+    buttonsLayout->addWidget(backspaceButton, 1, 3);
 
-    // Седьмой ряд
-    layout->addWidget(changeSignButton, 7, 0);
-    layout->addWidget(m_digitButtons[0], 7, 1);
-    layout->addWidget(pointButton, 7, 2);
-    layout->addWidget(equalButton, 7, 3);
+    buttonsLayout->addWidget(squareButton, 2, 0);
+    buttonsLayout->addWidget(powerButton, 2, 1);
+    buttonsLayout->addWidget(reciprocalButton, 2, 2);
+    buttonsLayout->addWidget(divisionButton, 2, 3);
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->addWidget(frame);
+    buttonsLayout->addWidget(m_digitButtons[7], 3, 0);
+    buttonsLayout->addWidget(m_digitButtons[8], 3, 1);
+    buttonsLayout->addWidget(m_digitButtons[9], 3, 2);
+    buttonsLayout->addWidget(timesButton, 3, 3);
+
+    buttonsLayout->addWidget(m_digitButtons[4], 4, 0);
+    buttonsLayout->addWidget(m_digitButtons[5], 4, 1);
+    buttonsLayout->addWidget(m_digitButtons[6], 4, 2);
+    buttonsLayout->addWidget(minusButton, 4, 3);
+
+    buttonsLayout->addWidget(m_digitButtons[1], 5, 0);
+    buttonsLayout->addWidget(m_digitButtons[2], 5, 1);
+    buttonsLayout->addWidget(m_digitButtons[3], 5, 2);
+    buttonsLayout->addWidget(plusButton, 5, 3);
+
+    buttonsLayout->addWidget(changeSignButton, 6, 0);
+    buttonsLayout->addWidget(m_digitButtons[0], 6, 1);
+    buttonsLayout->addWidget(pointButton, 6, 2);
+    buttonsLayout->addWidget(equalButton, 6, 3);
+
+    mainLayout->addLayout(buttonsLayout);
+
+    for (int i = 0; i < 7; ++i) {
+        buttonsLayout->setRowStretch(i, 1);
+    }
+    for (int j = 0; j < 4; ++j) {
+        buttonsLayout->setColumnStretch(j, 1);
+    }
+
+    qDebug() << "CalculatorBase UI initialized";
 }
 
-// Реализация методов CalculatorBase...
-// (остальные методы аналогичны вашему исходному коду)
+QLineEdit* CalculatorBase::createHistoryDisplay()
+{
+    QLineEdit *historyDisplay = new QLineEdit();
+    historyDisplay->setReadOnly(true);
+    historyDisplay->setAlignment(Qt::AlignRight);
+    historyDisplay->setMaxLength(100);
+    historyDisplay->setStyleSheet(
+        "QLineEdit {"
+        "   font-size: 16px;"
+        "   padding: 5px;"
+        "   border: 2px solid #888;"
+        "   border-radius: 6px;"
+        "   background-color: #f8f8f8;"
+        "   color: #666;"
+        "   min-height: 30px;"
+        "   margin-bottom: 5px;"
+        "}"
+    );
+    historyDisplay->setText("0");
+    return historyDisplay;
+}
 
 QLineEdit* CalculatorBase::createDisplay()
 {
     QLineEdit *display = new QLineEdit("0");
     display->setReadOnly(true);
     display->setAlignment(Qt::AlignRight);
+    display->setMaxLength(50);
     display->setStyleSheet(
-            "QLineEdit {"
-            "   font-size: 30px;"
-            "   padding: 5px;"
-            "   border: 2px solid #555;"
-            "   background-color: #f8f8f8;"
-            "   min-height: 30px;"
-            "}"
-        );
+        "QLineEdit {"
+        "   font-size: 28px;"
+        "   padding: 10px;"
+        "   border: 3px solid #555;"
+        "   border-radius: 8px;"
+        "   background-color: #f8f8f8;"
+        "   min-height: 40px;"
+        "   margin-bottom: 10px;"
+        "}"
+    );
     return display;
 }
 
@@ -161,33 +262,152 @@ void CalculatorBase::digitClicked()
     if (!clickedButton) return;
 
     QString digit = clickedButton->text();
+    QString currentText = m_display->text();
 
-    if (m_waiting_for_operand || m_newCalculation) {
-        m_display->clear();
-        m_newCalculation = false;
-        m_waiting_for_operand = false;
-        if (m_newCalculation) {
+    // Случай 1: Если это НОВОЕ вычисление (только что получили результат)
+    if (m_newCalculation) {
+            // Полностью очищаем и начинаем новое число
+            m_display->clear();
+            m_display->setText(digit);
             m_expression.clear();
+            m_expression.append({digit.toDouble(), "", false});
+            m_newCalculation = false;
+            m_waiting_for_operand = false;
+            updateHistoryDisplay();
+            return;
         }
-    }
 
-    m_display->setText(m_display->text() + digit);
+
+    // Случай 2: Если ожидаем новый операнд (после операции)
+    if (m_waiting_for_operand) {
+            m_display->clear();
+            m_display->setText(digit);
+            m_waiting_for_operand = false;
+
+            if (!m_expression.isEmpty() && m_expression.last().isOperator) {
+                m_expression.append({digit.toDouble(), "", false});
+            } else {
+                m_expression.clear();
+                m_expression.append({digit.toDouble(), "", false});
+            }
+            updateHistoryDisplay();
+            return;
+        }
+
+    // Случай 3: Продолжаем ввод текущего числа
+    if (currentText == "0" && !currentText.contains('.')) {
+            m_display->setText(digit);
+
+            if (!m_expression.isEmpty() && !m_expression.last().isOperator) {
+                m_expression.last().value = digit.toDouble();
+            } else {
+                m_expression.append({digit.toDouble(), "", false});
+            }
+        } else {
+            m_display->setText(currentText + digit);
+
+            if (!m_expression.isEmpty() && !m_expression.last().isOperator) {
+                m_expression.last().value = m_display->text().toDouble();
+            }
+        }
+
+        updateHistoryDisplay();
 }
 
 void CalculatorBase::pointClicked()
 {
+    QString currentText = m_display->text();
+
+    // Если это новое вычисление
+    if (m_newCalculation) {
+        // Начинаем с "0."
+        m_display->clear();
+        m_display->setText("0.");
+        m_expression.clear();
+        m_expression.append({0.0, "", false});
+        m_newCalculation = false;
+        m_waiting_for_operand = false;
+        updateHistoryDisplay();
+        return;
+    }
+
+    // Проверяем, есть ли уже точка
+    if (currentText.contains('.')) {
+        return;  // Точка уже есть - ничего не делаем
+    }
+
+    // Если ожидаем новый операнд
     if (m_waiting_for_operand) {
-        m_display->setText("0");
+        m_display->setText("0.");
+        m_waiting_for_operand = false;
+
+        if (!m_expression.isEmpty() && m_expression.last().isOperator) {
+            m_expression.append({0.0, "", false});
+        }
+        updateHistoryDisplay();
+        return;
     }
-    if (!m_display->text().contains('.')) {
-        m_display->setText(m_display->text() + ".");
+
+    // Обычный случай
+    if (currentText.isEmpty() || currentText == "0") {
+        m_display->setText("0.");
+    } else {
+        m_display->setText(currentText + ".");
     }
-    m_waiting_for_operand = false;
+
+    if (!m_expression.isEmpty() && !m_expression.last().isOperator) {
+        m_expression.last().value = m_display->text().toDouble();
+    }
+
+    updateHistoryDisplay();
+}
+QString CalculatorBase::formatNumberForDisplay(double value)
+{
+    if (qIsNaN(value) || qIsInf(value)) {
+        return "Error";
+    }
+
+    // Проверяем, является ли число целым
+    double intPart;
+    double fracPart = std::modf(value, &intPart);
+
+    // Если дробная часть равна нулю (или почти нулю), показываем как целое число
+    if (qFuzzyIsNull(fracPart)) {
+        return QString::number(static_cast<long long>(value));
+    }
+
+    // Форматируем с 15 знаками после запятой
+    QString result = QString::number(value, 'f', 15);
+
+    // Убираем лишние нули в конце
+    if (result.contains('.')) {
+        // Удаляем все нули с конца
+        while (result.endsWith('0')) {
+            result.chop(1);
+        }
+        // Если после удаления нулей осталась точка, удаляем и её
+        if (result.endsWith('.')) {
+            result.chop(1);
+        }
+    }
+
+    // Для очень больших чисел используем научную нотацию
+    double absValue = qAbs(value);
+    if (absValue >= 1.0e12 || (absValue > 0 && absValue < 1.0e-10)) {
+        QString sciNotation = QString::number(value, 'g', 12);
+        return sciNotation;
+    }
+
+    return result;
 }
 
 void CalculatorBase::changeSignClicked()
 {
     QString text = m_display->text();
+    if (text.isEmpty()) {
+        text = "0";
+    }
+
     bool ok;
     double value = text.toDouble(&ok);
     if (!ok) {
@@ -195,43 +415,129 @@ void CalculatorBase::changeSignClicked()
         return;
     }
     double result = m_mathOps.changeSign(value);
-    m_display->setText(QString::number(result));
+
+    m_display->clear();
+    m_display->setText(formatNumberForDisplay(result));
 }
 
 void CalculatorBase::backspaceClicked()
 {
-    if (m_waiting_for_operand) return;
+    qDebug() << "Backspace clicked. Expression size:" << m_expression.size();
 
-    QString text = m_display->text();
-    if (text.isEmpty()) return;
+    // Случай 1: Если выражение не пустое - удаляем из истории
+    if (!m_expression.isEmpty()) {
+        // Получаем последний элемент выражения
+        CalculationNode lastNode = m_expression.last();
 
-    if (text.endsWith(' ')) {
-        text.chop(3);
-        if (!m_expression.isEmpty() && m_expression.last().isOperator) {
+        // Если последний элемент - оператор
+        if (lastNode.isOperator) {
+            // Удаляем оператор из выражения
             m_expression.removeLast();
+
+            // Обновляем историю
+            updateHistoryDisplay();
+
+            // Если после удаления оператора выражение не пустое
+            if (!m_expression.isEmpty()) {
+                // И последний элемент теперь - число, показываем его в основном дисплее
+                if (!m_expression.last().isOperator) {
+                    QString numStr = QString::number(m_expression.last().value, 'g', 10);
+                    m_display->setText(numStr);
+                    m_waiting_for_operand = false;
+                } else {
+                    // Если все еще оператор, очищаем дисплей
+                    m_display->clear();
+                    m_waiting_for_operand = true;
+                }
+            } else {
+                // Выражение полностью очищено
+                m_display->setText("0");
+                m_waiting_for_operand = true;
+                m_newCalculation = true;
+            }
         }
-    } else {
-        text.chop(1);
+        // Если последний элемент - число
+        else {
+            QString currentNum = QString::number(lastNode.value);
+
+            // Если число имеет более одной цифры
+            if (currentNum.length() > 1) {
+                // Удаляем последнюю цифру
+                currentNum.chop(1);
+                lastNode.value = currentNum.toDouble();
+                m_expression.last() = lastNode;
+
+                // Обновляем дисплей и историю
+                m_display->setText(currentNum);
+                updateHistoryDisplay();
+                m_waiting_for_operand = false;
+            }
+            // Если число состоит из одной цифры
+            else {
+                // Удаляем число из выражения
+                m_expression.removeLast();
+
+                // Обновляем историю
+                updateHistoryDisplay();
+
+                // Если выражение не пустое
+                if (!m_expression.isEmpty()) {
+                    // И последний элемент - оператор
+                    if (m_expression.last().isOperator) {
+                        m_display->clear();
+                        m_waiting_for_operand = true;
+                    } else {
+                        // Показываем предыдущее число
+                        QString numStr = QString::number(m_expression.last().value, 'g', 10);
+                        m_display->setText(numStr);
+                        m_waiting_for_operand = false;
+                    }
+                } else {
+                    // Выражение пустое
+                    m_display->setText("0");
+                    m_waiting_for_operand = true;
+                    m_newCalculation = true;
+                }
+            }
+        }
+        return;
     }
 
-    m_display->setText(text.isEmpty() ? "0" : text);
-}
+    // Случай 2: Если выражение пустое, обрабатываем обычный бекспейс для дисплея
+    QString text = m_display->text();
+    if (text.isEmpty() || text == "0" || m_waiting_for_operand) {
+        m_display->setText("0");
+        m_waiting_for_operand = true;
+        return;
+    }
 
-void CalculatorBase::clear()
-{
-    m_display->setText("0");
-    m_waiting_for_operand = true;
+    // Удаляем последний символ из дисплея
+    text.chop(1);
+
+    if (text.isEmpty()) {
+        m_display->setText("0");
+        m_waiting_for_operand = true;
+    } else {
+        m_display->setText(text);
+    }
 }
 
 void CalculatorBase::clearAll()
 {
     m_display->setText("0");
+    resetHistoryDisplay();
     m_expression.clear();
     m_stored_value = 0.0;
     m_result = 0.0;
     m_waiting_for_operand = true;
     m_newCalculation = true;
     m_pending_operation = "";
+}
+
+void CalculatorBase::clear()
+{
+    m_display->clear();
+    m_waiting_for_operand = true;
 }
 
 void CalculatorBase::unaryOperatorClicked()
@@ -242,6 +548,7 @@ void CalculatorBase::unaryOperatorClicked()
     QString operation = clickedButton->text();
     QString displayText = m_display->text();
 
+    // Убираем "=" из отображения если есть
     if (displayText.contains("=")) {
         QStringList parts = displayText.split("=");
         if (parts.size() > 1) {
@@ -257,23 +564,18 @@ void CalculatorBase::unaryOperatorClicked()
     }
 
     double result = 0.0;
-    QString operationText;
 
     if (operation == "1/x") {
         result = m_mathOps.reciprocal(operand);
-        operationText = QString("1/(%1)").arg(operand);
     }
     else if (operation == "x²") {
         result = m_mathOps.square(operand);
-        operationText = QString("(%1)²").arg(operand);
     }
     else if (operation == "√") {
         result = m_mathOps.squareRoot(operand);
-        operationText = QString("√(%1)").arg(operand);
     }
     else if (operation == "%") {
         result = m_mathOps.percent(operand);
-        operationText = QString("%1%").arg(operand);
     }
 
     if (qIsNaN(result)) {
@@ -281,40 +583,73 @@ void CalculatorBase::unaryOperatorClicked()
         return;
     }
 
-    m_display->setText(QString("%1 = %2").arg(operationText).arg(result));
-    m_waiting_for_operand = true;
-    m_newCalculation = true;
-    m_result = result;
-}
+    // Форматируем результат
+    QString formattedResult = formatNumberForDisplay(result);
 
+    // Отображаем результат
+    m_display->setText(formattedResult);
+
+    m_expression.clear();
+    m_expression.append({result, "", false});
+
+    updateHistoryDisplay();
+
+    m_waiting_for_operand = false;
+    m_newCalculation = true;
+}
 void CalculatorBase::doubleOperandClicked()
 {
     MyButton *clickedButton = qobject_cast<MyButton*>(sender());
     if (!clickedButton) return;
 
     QString operation = clickedButton->text();
+
+    // Получаем текущее значение из дисплея
+    QString displayText = m_display->text();
     bool ok;
-    double operand = m_display->text().toDouble(&ok);
+    double operand = displayText.toDouble(&ok);
     if (!ok) {
         m_display->setText("Error");
         return;
     }
 
-    if (!m_newCalculation) {
-        m_stored_value = operand;
-    } else {
-        m_stored_value = m_result;
+    // Если это новое вычисление (только что получили результат)
+    if (m_newCalculation) {
+        // Начинаем новое выражение с результата
+        m_expression.clear();
+        m_expression.append({operand, "", false});
+        m_expression.append({0.0, operation, true});
+        m_newCalculation = false;
+    }
+    // Если выражение пустое
+    else if (m_expression.isEmpty()) {
+        // Начинаем новое выражение
+        m_expression.append({operand, "", false});
+        m_expression.append({0.0, operation, true});
+    }
+    // Если последний элемент - оператор
+    else if (m_expression.last().isOperator) {
+        // Заменяем оператор (кроме скобок)
+        if (m_expression.last().operation != "(" &&
+            m_expression.last().operation != ")") {
+            m_expression.last().operation = operation;
+        } else {
+            // Если скобка, добавляем новый оператор после неё
+            m_expression.append({0.0, operation, true});
+        }
+    }
+    // Если последний элемент - число
+    else {
+        // Добавляем оператор
+        m_expression.append({0.0, operation, true});
     }
 
-    m_expression.append({m_stored_value, "", false});
-    m_expression.append({0.0, operation, true});
-
     m_pending_operation = operation;
-    m_display->setText(QString("%1 %2 ").arg(m_stored_value).arg(operation));
-    m_newCalculation = true;
+    updateHistoryDisplay();
+
+    m_display->clear();
     m_waiting_for_operand = true;
 }
-
 bool CalculatorBase::calculate(double operand)
 {
     double result = 0.0;
@@ -345,36 +680,107 @@ bool CalculatorBase::calculate(double operand)
 
 void CalculatorBase::equalClicked()
 {
-    bool ok;
-    double operand = m_display->text().toDouble(&ok);
-    if (!ok) {
-        m_display->setText("Error");
-        return;
-    }
+    // Получаем текущее значение из дисплея
+    double currentValue = 0.0;
+    QString displayText = m_display->text();
 
-    m_expression.append({operand, "", false});
-
-    QString exprStr;
-    for (const auto& node : qAsConst(m_expression)) {
-        if (node.isOperator) {
-            exprStr += " " + node.operation + " ";
-        } else {
-            exprStr += QString::number(node.value);
+    if (!displayText.isEmpty()) {
+        bool ok;
+        currentValue = displayText.toDouble(&ok);
+        if (!ok) {
+            m_display->setText("Error");
+            return;
         }
     }
-    exprStr += " =";
+
+    // Если выражение пустое, просто показываем текущее значение
+    if (m_expression.isEmpty()) {
+        m_display->clear();
+        m_display->setText(formatNumberForDisplay(currentValue));
+        m_waiting_for_operand = true;
+        m_newCalculation = true;
+        return;
+    }
+
+    // Проверяем последний элемент выражения
+    // Если последний элемент - оператор (+, -, ×, ÷), добавляем текущее значение
+    if (!m_expression.isEmpty() && m_expression.last().isOperator) {
+        // Если последний оператор не скобка, добавляем текущее значение
+        if (m_expression.last().operation != "(" &&
+            m_expression.last().operation != ")") {
+            // Если дисплей пустой, используем последнее число из выражения
+            if (displayText.isEmpty() || m_waiting_for_operand) {
+                // Ищем последнее число в выражении
+                for (int i = m_expression.size() - 1; i >= 0; i--) {
+                    if (!m_expression[i].isOperator) {
+                        currentValue = m_expression[i].value;
+                        break;
+                    }
+                }
+            }
+            m_expression.append({currentValue, "", false});
+        }
+    }
+    // Если последний элемент - число, обновляем его значение
+    else if (!m_expression.isEmpty() && !m_expression.last().isOperator) {
+        m_expression.last().value = currentValue;
+    }
+
+    qDebug() << "=== BEFORE EVALUATION ===";
+    for (int i = 0; i < m_expression.size(); ++i) {
+        if (m_expression[i].isOperator) {
+            qDebug() << i << "Operator:" << m_expression[i].operation;
+        } else {
+            qDebug() << i << "Value:" << m_expression[i].value;
+        }
+    }
 
     double result = m_mathOps.evaluateExpression(m_expression);
-    if (qIsNaN(result)) {
+
+    if (qIsNaN(result) || qIsInf(result)) {
         m_display->setText("Error");
         return;
     }
 
-    m_display->setText(exprStr + " " + QString::number(result));
+    m_historyDisplay->clear();
+
+    // Используем новый метод форматирования
+    m_display->clear();
+    m_display->setText(formatNumberForDisplay(result));
+
     m_result = result;
     m_expression.clear();
     m_waiting_for_operand = true;
     m_newCalculation = true;
+}
+
+void CalculatorBase::updateHistoryDisplay()
+{
+    QString historyText;
+    for (const auto& node : qAsConst(m_expression)) {
+        if (node.isOperator) {
+            if (node.operation == "(" || node.operation == ")") {
+                historyText += node.operation;
+            } else {
+                historyText += " " + node.operation + " ";
+            }
+        } else {
+            // Используем ТОТ ЖЕ метод форматирования, что и для основного дисплея
+            QString numStr = formatNumberForDisplay(node.value);
+            historyText += numStr;
+        }
+    }
+
+    if (!historyText.isEmpty()) {
+        m_historyDisplay->setText(historyText);
+    } else {
+        m_historyDisplay->setText("0");
+    }
+}
+
+void CalculatorBase::resetHistoryDisplay()
+{
+    m_historyDisplay->setText("0");
 }
 
 void CalculatorBase::clearMemory()
@@ -384,10 +790,10 @@ void CalculatorBase::clearMemory()
 
 void CalculatorBase::readMemory()
 {
-    m_display->setText(QString::number(m_sum_in_memory));
+    m_display->clear();
+    m_display->setText(formatNumberForDisplay(m_sum_in_memory));
     m_waiting_for_operand = false;
 }
-
 void CalculatorBase::addToMemory()
 {
     bool ok;
