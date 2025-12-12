@@ -26,6 +26,10 @@ public slots:
     virtual void doubleOperandClicked();
     virtual void equalClicked();
 
+    // Виртуальные слоты для скобок
+    virtual void leftParenClicked() {}
+    virtual void rightParenClicked() {}
+
     virtual void clearMemory();
     virtual void readMemory();
     virtual void addToMemory();
@@ -36,10 +40,10 @@ protected:
     QLineEdit* createDisplay();
     QLineEdit* createHistoryDisplay();
     MyButton* createButton(const QString &text, const char *member);
-    void showOperation(const QString &operationText, double result);
     bool calculate(double operand);
     void updateHistoryDisplay();
     void resetHistoryDisplay();
+    void updateExpressionWithCurrentNumber();
 
     QLineEdit *m_display;
     QLineEdit *m_historyDisplay;

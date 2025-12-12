@@ -12,18 +12,33 @@ class ProgrammerCalculator : public CalculatorBase
 
 public:
     explicit ProgrammerCalculator(QWidget *parent = nullptr);
+    ~ProgrammerCalculator() override = default;
+
+    // Переопределенные методы из CalculatorBase
+    void digitClicked() override;
+    void pointClicked() override;
+    void changeSignClicked() override;
+    void backspaceClicked() override;
+    void clear() override;
+    void clearAll() override;
+    void unaryOperatorClicked() override;
+    void doubleOperandClicked() override;
+    void equalClicked() override;
 
 public slots:
     void numberSystemDigitClicked();
     void bitwiseOperationClicked();
     void onBaseGroupButtonClicked(QAbstractButton* button);
-    void leftParenClicked();
-    void rightParenClicked();
 
-private:
+    // Слоты для скобок
+    void leftParenClicked() override;
+    void rightParenClicked() override;
+
+protected:
     void setupProgrammerUI();
     void updateNumberSystemDisplays();
     void updateNumberSystemButtons();
+    void updateExpressionWithCurrentNumber();
 
     int m_current_base;
     QLineEdit *m_display_bin;

@@ -6,6 +6,7 @@
 ScientificCalculator::ScientificCalculator(QWidget *parent)
     : CalculatorBase(parent, false)
 {
+    m_expression.clear();
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->setSpacing(5);
@@ -14,9 +15,18 @@ ScientificCalculator::ScientificCalculator(QWidget *parent)
     mainLayout->addWidget(m_historyDisplay);
 
     m_display = createDisplay();
+    m_display->setText("0");
     mainLayout->addWidget(m_display);
 
     setupScientificUI();
+
+    m_waiting_for_operand = true;
+    m_newCalculation = true;
+
+    qDebug() << "ScientificCalculator initialized";
+        qDebug() << "Display text:" << m_display->text();
+        qDebug() << "Waiting for operand:" << m_waiting_for_operand;
+        qDebug() << "New calculation:" << m_newCalculation;
 }
 
 void ScientificCalculator::setupScientificUI()
@@ -41,10 +51,17 @@ void ScientificCalculator::setupScientificUI()
     scientificLayout->setSpacing(5);
     scientificLayout->setContentsMargins(5, 5, 5, 5);
 
+    // Очищаем существующие кнопки цифр, если они есть
     for(int i = 0; i < 10; ++i) {
-        if (!m_digitButtons[i]) {
-            m_digitButtons[i] = createButton(QString::number(i), SLOT(digitClicked()));
+        if (m_digitButtons[i]) {
+            delete m_digitButtons[i];
+            m_digitButtons[i] = nullptr;
         }
+    }
+
+    // Создаем новые кнопки цифр
+    for(int i = 0; i < 10; ++i) {
+        m_digitButtons[i] = createButton(QString::number(i), SLOT(digitClicked()));
     }
 
     QString scientificButtonStyle =
@@ -261,8 +278,8 @@ void ScientificCalculator::sinClicked()
     m_expression.append({result, "", false});
 
     updateHistoryDisplay();
-    m_waiting_for_operand = false;
-    m_newCalculation = false;
+    m_waiting_for_operand = true;
+    m_newCalculation = true;
 }
 
 void ScientificCalculator::cosClicked()
@@ -285,8 +302,8 @@ void ScientificCalculator::cosClicked()
     m_expression.append({result, "", false});
 
     updateHistoryDisplay();
-    m_waiting_for_operand = false;
-    m_newCalculation = false;
+    m_waiting_for_operand = true;
+    m_newCalculation = true;
 }
 
 void ScientificCalculator::tanClicked()
@@ -309,8 +326,8 @@ void ScientificCalculator::tanClicked()
     m_expression.append({result, "", false});
 
     updateHistoryDisplay();
-    m_waiting_for_operand = false;
-    m_newCalculation = false;
+    m_waiting_for_operand = true;
+    m_newCalculation = true;
 }
 
 void ScientificCalculator::ctanClicked()
@@ -333,8 +350,8 @@ void ScientificCalculator::ctanClicked()
     m_expression.append({result, "", false});
 
     updateHistoryDisplay();
-    m_waiting_for_operand = false;
-    m_newCalculation = false;
+    m_waiting_for_operand = true;
+    m_newCalculation = true;
 }
 
 void ScientificCalculator::logClicked()
@@ -357,8 +374,8 @@ void ScientificCalculator::logClicked()
     m_expression.append({result, "", false});
 
     updateHistoryDisplay();
-    m_waiting_for_operand = false;
-    m_newCalculation = false;
+    m_waiting_for_operand = true;
+    m_newCalculation = true;
 }
 
 void ScientificCalculator::lnClicked()
@@ -381,8 +398,8 @@ void ScientificCalculator::lnClicked()
     m_expression.append({result, "", false});
 
     updateHistoryDisplay();
-    m_waiting_for_operand = false;
-    m_newCalculation = false;
+    m_waiting_for_operand = true;
+    m_newCalculation = true;
 }
 
 void ScientificCalculator::factorialClicked()
@@ -405,7 +422,7 @@ void ScientificCalculator::factorialClicked()
     m_expression.append({result, "", false});
 
     updateHistoryDisplay();
-    m_waiting_for_operand = false;
+    m_waiting_for_operand = true;
     m_newCalculation = true;
 }
 
@@ -456,8 +473,8 @@ void ScientificCalculator::TenInXClicked()
     m_expression.append({result, "", false});
 
     updateHistoryDisplay();
-    m_waiting_for_operand = false;
-    m_newCalculation = false;
+    m_waiting_for_operand = true;
+    m_newCalculation = true;
 }
 
 void ScientificCalculator::modulClicked()
@@ -476,8 +493,8 @@ void ScientificCalculator::modulClicked()
     m_expression.append({result, "", false});
 
     updateHistoryDisplay();
-    m_waiting_for_operand = false;
-    m_newCalculation = false;
+    m_waiting_for_operand = true;
+    m_newCalculation = true;
 }
 
 void ScientificCalculator::modClicked()
@@ -508,7 +525,7 @@ void ScientificCalculator::modClicked()
     updateHistoryDisplay();
     m_display->clear();
     m_waiting_for_operand = true;
-    m_newCalculation = false;
+    m_newCalculation = true;
 }
 
 void ScientificCalculator::piClicked()
@@ -549,54 +566,98 @@ void ScientificCalculator::eClicked()
 
 void ScientificCalculator::leftParenClicked()
 {
-    qDebug() << "leftParenClicked() called";
+    qDebug() << "=== leftParenClicked START ===";
+    qDebug() << "Display text:" << m_display->text();
+    qDebug() << "New calculation:" << m_newCalculation;
+    qDebug() << "Expression size:" << m_expression.size();
 
-    // Если перед скобкой есть число, добавляем оператор умножения
-    if (!m_expression.isEmpty() && !m_expression.last().isOperator) {
-        m_expression.append({0.0, "×", true});
-        qDebug() << "Added multiplication before parenthesis";
-    }
-
-    m_expression.append({0.0, "(", true});
-    m_display->setText(m_display->text() + "(");
-    updateHistoryDisplay();
-    m_waiting_for_operand = true;
-
-    qDebug() << "Expression after (:";
+    // Отладочный вывод всего выражения
+    qDebug() << "Current expression:";
     for (int i = 0; i < m_expression.size(); ++i) {
         if (m_expression[i].isOperator) {
-            qDebug() << i << "Operator:" << m_expression[i].operation;
+            qDebug() << "  [" << i << "] Operator:" << m_expression[i].operation;
         } else {
-            qDebug() << i << "Value:" << m_expression[i].value;
+            qDebug() << "  [" << i << "] Value:" << m_expression[i].value;
         }
     }
-}
 
+    QString currentText = m_display->text();
+
+    // Если дисплей показывает "Error" - очищаем всё
+    if (currentText == "Error") {
+        clearAll();
+        currentText = "0";
+    }
+
+    // ВСЕГДА обновляем выражение с текущим числом из дисплея
+    if (!currentText.isEmpty() && currentText != "0") {
+        bool ok;
+        double value = currentText.toDouble(&ok);
+        if (ok) {
+            // Добавляем или обновляем число в выражении
+            if (m_expression.isEmpty() || m_expression.last().isOperator) {
+                m_expression.append({value, "", false});
+            } else {
+                m_expression.last().value = value;
+            }
+        }
+    }
+
+    // Если это новое вычисление ИЛИ выражение пустое
+    if (m_newCalculation || m_expression.isEmpty()) {
+        qDebug() << "Starting new expression with (";
+        // Просто добавляем скобку
+        m_expression.append({0.0, "(", true});
+    }
+    else {
+        // Продолжаем существующее выражение
+        // Если последний элемент - число, добавляем умножение
+        if (!m_expression.last().isOperator) {
+            m_expression.append({0.0, "×", true});
+            qDebug() << "Added × before (";
+        }
+        // Добавляем скобку
+        m_expression.append({0.0, "(", true});
+    }
+
+    // Обновляем отображение
+    updateHistoryDisplay();
+
+    // Очищаем дисплей для ввода внутри скобок
+    m_display->clear();
+    m_waiting_for_operand = true;
+    m_newCalculation = false;
+
+    qDebug() << "=== leftParenClicked END ===";
+    qDebug() << "New expression size:" << m_expression.size();
+    qDebug() << "Waiting for operand:" << m_waiting_for_operand;
+}
 void ScientificCalculator::rightParenClicked()
 {
-    qDebug() << "rightParenClicked() called";
+    // Обновляем текущее число в выражении
+    updateExpressionWithCurrentNumber();
 
-    // Если есть текущее число в дисплее, добавляем его в выражение
-    if (!m_waiting_for_operand && !m_display->text().isEmpty() && m_display->text() != "0") {
-        bool ok;
-        double currentValue = m_display->text().toDouble(&ok);
-        if (ok) {
-            m_expression.append({currentValue, "", false});
-            qDebug() << "Added current value:" << currentValue;
+    // Проверяем баланс скобок
+    int openCount = 0;
+    int closeCount = 0;
+    for (const auto& node : qAsConst(m_expression)) {
+        if (node.isOperator) {
+            if (node.operation == "(") openCount++;
+            if (node.operation == ")") closeCount++;
         }
     }
 
+    // Нельзя добавить лишнюю закрывающую скобку
+    if (closeCount >= openCount) {
+        return;
+    }
+
+    // Добавляем закрывающую скобку
     m_expression.append({0.0, ")", true});
-    m_display->setText(m_display->text() + ")");
-    updateHistoryDisplay();
-    m_waiting_for_operand = false;
 
-    qDebug() << "Expression after ):";
-    for (int i = 0; i < m_expression.size(); ++i) {
-        if (m_expression[i].isOperator) {
-            qDebug() << i << "Operator:" << m_expression[i].operation;
-        } else {
-            qDebug() << i << "Value:" << m_expression[i].value;
-        }
-    }
+    updateHistoryDisplay();
+
+    // После закрывающей скобки можно вводить операторы
+    m_display->clear();
+    m_waiting_for_operand = false;
 }

@@ -167,7 +167,6 @@ int MathOperations::getPriority(const QString& op)
     if (op == "(" || op == ")") return 0;
     if (op == "+" || op == "-") return 1;
     if (op == "×" || op == "÷" || op == "mod") return 2;
-    if (op == "mod") return 2;
     if (op == "^") return 3;
     return -1;
 }
@@ -192,8 +191,10 @@ double MathOperations::applyOperation(double a, double b, const QString& op)
 
 double MathOperations::evaluateExpression(const QList<CalculationNode>& expr)
 {
-    if (expr.isEmpty())
+    if (expr.isEmpty()) {
+        qDebug() << "evaluateExpression: empty expression";
         return 0.0;
+    }
 
     qDebug() << "=== EVALUATING EXPRESSION ===";
     for (int i = 0; i < expr.size(); ++i) {
@@ -204,11 +205,53 @@ double MathOperations::evaluateExpression(const QList<CalculationNode>& expr)
         }
     }
 
+    // Шаг 1: Добавляем неявное умножение где нужно
+    QList<CalculationNode> processedExpr;
+    for (int i = 0; i < expr.size(); ++i) {
+        processedExpr.append(expr[i]);
+
+        // Правило 1: число за которым идет открывающая скобка → добавляем умножение
+        // Пример: 2( → 2×(
+        if (i < expr.size() - 1 &&
+            !expr[i].isOperator &&
+            expr[i+1].isOperator && expr[i+1].operation == "(") {
+            processedExpr.append({0.0, "×", true});
+            qDebug() << "Added implicit multiplication after number at position" << i;
+        }
+
+        // Правило 2: закрывающая скобка за которой идет число → добавляем умножение
+        // Пример: )2 → )×2
+        if (i < expr.size() - 1 &&
+            expr[i].isOperator && expr[i].operation == ")" &&
+            !expr[i+1].isOperator) {
+            processedExpr.append({0.0, "×", true});
+            qDebug() << "Added implicit multiplication after ) at position" << i;
+        }
+
+        // Правило 3: закрывающая скобка за которой идет открывающая → добавляем умножение
+        // Пример: )( → )×(
+        if (i < expr.size() - 1 &&
+            expr[i].isOperator && expr[i].operation == ")" &&
+            expr[i+1].isOperator && expr[i+1].operation == "(") {
+            processedExpr.append({0.0, "×", true});
+            qDebug() << "Added implicit multiplication between ) and ( at position" << i;
+        }
+    }
+
+    qDebug() << "=== PROCESSED EXPRESSION ===";
+    for (int i = 0; i < processedExpr.size(); ++i) {
+        if (processedExpr[i].isOperator) {
+            qDebug() << i << "Operator:" << processedExpr[i].operation;
+        } else {
+            qDebug() << i << "Value:" << processedExpr[i].value;
+        }
+    }
+
     // Преобразуем инфиксную нотацию в обратную польскую (RPN)
     QList<QString> output;
     QStack<QString> stack;
 
-    for (const auto& node : expr) {
+    for (const auto& node : qAsConst(processedExpr)) {
         if (!node.isOperator) {
             // Число - добавляем в выход
             output.append(QString::number(node.value, 'g', 15));
