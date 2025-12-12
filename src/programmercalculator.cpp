@@ -146,7 +146,7 @@ void ProgrammerCalculator::setupProgrammerUI()
     MyButton *rightParenButton = createButton(")", SLOT(rightParenClicked()));
     MyButton *percentButton = createButton("%", SLOT(unaryOperatorClicked()));
     MyButton *divisionButton = createButton("/", SLOT(doubleOperandClicked()));
-    MyButton *timesButton = createButton("*", SLOT(doubleOperandClicked()));
+    MyButton *timesButton = createButton("×", SLOT(doubleOperandClicked()));
     MyButton *minusButton = createButton("-", SLOT(doubleOperandClicked()));
     MyButton *plusButton = createButton("+", SLOT(doubleOperandClicked()));
     MyButton *equalButton = createButton("=", SLOT(equalClicked()));
