@@ -3,7 +3,7 @@ TARGET = My_Calculator
 TEMPLATE = app
 
 SOURCES += \
-    src/calculator.cpp \
+    src/MainWindow.cpp \
     src/calculatorbase.cpp \
     src/main.cpp \
     src/mathoperations.cpp \
@@ -12,7 +12,7 @@ SOURCES += \
     src/scientificcalculator.cpp
 
 HEADERS += \
-    src/calculator.h \
+    src/MainWindow.h \
     src/calculatorbase.h \
     src/mathoperations.h \
     src/mybutton.h \
@@ -21,3 +21,6 @@ HEADERS += \
 
 # Для правильной работы moc
 CONFIG += c++11
+
+# Отключаем отладочный вывод в релизной версии
+CONFIG(release, debug|release): DEFINES += QT_NO_DEBUG_OUTPUT

@@ -1,4 +1,5 @@
 #include "programmercalculator.h"
+#include "mybutton.h"
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -631,7 +632,7 @@ void ProgrammerCalculator::equalClicked()
         }
     }
 
-    double result = m_mathOps.evaluateExpression(m_expression);
+    double result = evaluateExpression(m_expression);
 
     qDebug() << "Result from evaluateExpression:" << result;
 
@@ -729,7 +730,7 @@ void ProgrammerCalculator::unaryOperatorClicked()
     double result = 0.0;
 
     if (operation == "%") {
-        result = m_mathOps.percent(operand);
+        result = percent(operand);
     }
 
     if (qIsNaN(result)) {
@@ -784,7 +785,7 @@ void ProgrammerCalculator::changeSignClicked()
         return;
     }
 
-    double result = m_mathOps.changeSign(value);
+    double result = changeSign(value);
 
     // Преобразуем результат в текущую систему счисления
     QString formattedResult;
@@ -798,25 +799,25 @@ void ProgrammerCalculator::changeSignClicked()
     m_display->clear();
     m_display->setText(formattedResult);
 
-    updateNumberSystemDisplays(); // ОБНОВЛЯЕМ ДИСПЛЕИ
+    updateNumberSystemDisplays();
 }
 
 void ProgrammerCalculator::clearAll()
 {
-    CalculatorBase::clearAll(); // Вызываем родительский метод
-    updateNumberSystemDisplays(); // ОБНОВЛЯЕМ ДИСПЛЕИ
+    CalculatorBase::clearAll();
+    updateNumberSystemDisplays();
 }
 
 void ProgrammerCalculator::clear()
 {
-    CalculatorBase::clear(); // Вызываем родительский метод
-    updateNumberSystemDisplays(); // ОБНОВЛЯЕМ ДИСПЛЕИ
+    CalculatorBase::clear();
+    updateNumberSystemDisplays();
 }
 
 void ProgrammerCalculator::backspaceClicked()
 {
-    CalculatorBase::backspaceClicked(); // Вызываем родительский метод
-    updateNumberSystemDisplays(); // ОБНОВЛЯЕМ ДИСПЛЕИ
+    CalculatorBase::backspaceClicked();
+    updateNumberSystemDisplays();
 }
 
 void ProgrammerCalculator::doubleOperandClicked()
@@ -898,7 +899,7 @@ void ProgrammerCalculator::pointClicked()
         m_display->setText(currentText + ",");
     }
 
-    updateNumberSystemDisplays(); // ОБНОВЛЯЕМ ДИСПЛЕИ
+    updateNumberSystemDisplays();
 }
 
 void ProgrammerCalculator::updateExpressionWithCurrentNumber()

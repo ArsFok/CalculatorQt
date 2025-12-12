@@ -1,38 +1,45 @@
-    #ifndef SCIENTIFICCALCULATOR_H
-    #define SCIENTIFICCALCULATOR_H
+#ifndef SCIENTIFICCALCULATOR_H
+#define SCIENTIFICCALCULATOR_H
 
-    #include "calculatorbase.h"
+#include "calculatorbase.h"
+#include <QLineEdit>
+#include <QButtonGroup>
+#include <QRadioButton>
 
-    class ScientificCalculator : public CalculatorBase
-    {
-        Q_OBJECT
+// Forward declaration
+class QGridLayout;
+class QVBoxLayout;
 
-    public:
-        explicit ScientificCalculator(QWidget *parent = nullptr);
+class ScientificCalculator : public CalculatorBase
+{
+    Q_OBJECT
 
-    public slots:
-        void sinClicked();
-        void cosClicked();
-        void tanClicked();
-        void ctanClicked();
+public:
+    explicit ScientificCalculator(QWidget *parent = nullptr);
 
-        void logClicked();
-        void lnClicked();
+public slots:
+    void sinClicked();
+    void cosClicked();
+    void tanClicked();
+    void ctanClicked();
 
-        void factorialClicked();
-        void powerClicked();
-        void TenInXClicked();
-        void modulClicked();
-        void modClicked();
+    void logClicked();
+    void lnClicked();
 
-        void piClicked();
-        void eClicked();
+    void factorialClicked();
+    void powerClicked();
+    void TenInXClicked();
+    void modulClicked();
+    void modClicked();
 
-        void leftParenClicked();
-        void rightParenClicked();
+    void piClicked();
+    void eClicked();
 
-    private:
-        void setupScientificUI();
-    };
+    void leftParenClicked() override;
+    void rightParenClicked() override;
 
-    #endif // SCIENTIFICCALCULATOR_H
+private:
+    void setupScientificUI();
+};
+
+#endif // SCIENTIFICCALCULATOR_H

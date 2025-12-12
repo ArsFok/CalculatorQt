@@ -1,11 +1,14 @@
 #include "scientificcalculator.h"
+#include "mybutton.h"
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QDebug>
+#include <QLabel>
 
 ScientificCalculator::ScientificCalculator(QWidget *parent)
     : CalculatorBase(parent, false)
 {
+
     m_expression.clear();
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(10, 10, 10, 10);
@@ -18,15 +21,11 @@ ScientificCalculator::ScientificCalculator(QWidget *parent)
     m_display->setText("0");
     mainLayout->addWidget(m_display);
 
-    setupScientificUI();
-
     m_waiting_for_operand = true;
     m_newCalculation = true;
+    m_pending_operation = "";
 
-    qDebug() << "ScientificCalculator initialized";
-        qDebug() << "Display text:" << m_display->text();
-        qDebug() << "Waiting for operand:" << m_waiting_for_operand;
-        qDebug() << "New calculation:" << m_newCalculation;
+    setupScientificUI();
 }
 
 void ScientificCalculator::setupScientificUI()
@@ -266,7 +265,7 @@ void ScientificCalculator::sinClicked()
         m_display->setText("Error");
         return;
     }
-    double result = m_mathOps.sin(value);
+    double result = sin(value);
     if (qIsNaN(result)) {
         m_display->setText("Error");
         return;
@@ -290,7 +289,7 @@ void ScientificCalculator::cosClicked()
         m_display->setText("Error");
         return;
     }
-    double result = m_mathOps.cos(value);
+    double result = cos(value);
     if (qIsNaN(result)) {
         m_display->setText("Error");
         return;
@@ -314,7 +313,7 @@ void ScientificCalculator::tanClicked()
         m_display->setText("Error");
         return;
     }
-    double result = m_mathOps.tan(value);
+    double result = tan(value);
     if (qIsNaN(result)) {
         m_display->setText("Error");
         return;
@@ -338,7 +337,7 @@ void ScientificCalculator::ctanClicked()
         m_display->setText("Error");
         return;
     }
-    double result = m_mathOps.ctan(value);
+    double result = ctan(value);
     if (qIsNaN(result)) {
         m_display->setText("Error");
         return;
@@ -362,7 +361,7 @@ void ScientificCalculator::logClicked()
         m_display->setText("Error");
         return;
     }
-    double result = m_mathOps.log10(value);
+    double result = log10(value);
     if (qIsNaN(result)) {
         m_display->setText("Error");
         return;
@@ -386,7 +385,7 @@ void ScientificCalculator::lnClicked()
         m_display->setText("Error");
         return;
     }
-    double result = m_mathOps.ln(value);
+    double result = ln(value);
     if (qIsNaN(result)) {
         m_display->setText("Error");
         return;
@@ -410,7 +409,7 @@ void ScientificCalculator::factorialClicked()
         m_display->setText("Error");
         return;
     }
-    double result = m_mathOps.factorial(value);
+    double result = factorial(value);
     if (qIsNaN(result)) {
         m_display->setText("Error");
         return;
@@ -465,7 +464,7 @@ void ScientificCalculator::TenInXClicked()
         m_display->setText("Error");
         return;
     }
-    double result = m_mathOps.powerOf10(exponent);
+    double result = powerOf10(exponent);
     QString formattedResult = formatNumberForDisplay(result);
     m_display->setText(formattedResult);
 
@@ -485,7 +484,7 @@ void ScientificCalculator::modulClicked()
         m_display->setText("Error");
         return;
     }
-    double result = m_mathOps.absolute(value);
+    double result = absolute(value);
     QString formattedResult = formatNumberForDisplay(result);
     m_display->setText(formattedResult);
 
@@ -534,7 +533,7 @@ void ScientificCalculator::piClicked()
     m_display->clear();
     m_expression.clear();
 
-    double piValue = MathOperations::PI;
+    double piValue = MATH_PI;
     QString piStr = formatNumberForDisplay(piValue);
     m_display->setText(piStr);
 
@@ -552,7 +551,7 @@ void ScientificCalculator::eClicked()
     m_display->clear();
     m_expression.clear();
 
-    double eValue = MathOperations::E;
+    double eValue = MATH_PI;
     QString eStr = formatNumberForDisplay(eValue);
     m_display->setText(eStr);
 

@@ -1,11 +1,16 @@
-#ifndef CALCULATOR_H
-#define CALCULATOR_H
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
 #include <QMainWindow>
 #include <QStackedWidget>
-#include "calculatorbase.h"
-#include "scientificcalculator.h"
-#include "programmercalculator.h"
+
+// Forward declarations
+class QStackedWidget;
+class CalculatorBase;
+class ScientificCalculator;
+class ProgrammerCalculator;
+class QButtonGroup;
+class QWidget;
 
 class Calculator : public QMainWindow
 {
@@ -31,4 +36,4 @@ private:
     QWidget *m_navContainer;
 };
 
-#endif // CALCULATOR_H
+#endif // MAINWINDOW_H

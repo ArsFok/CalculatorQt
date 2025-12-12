@@ -1,11 +1,11 @@
 #include "calculatorbase.h"
+#include "mybutton.h"
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QDebug>
 
 CalculatorBase::CalculatorBase(QWidget *parent, bool setupDefaultUI)
     : QWidget(parent),
-      m_mathOps(this),
       m_sum_in_memory(0.0),
       m_pending_operation(""),
       m_stored_value(0.0),
@@ -268,7 +268,6 @@ MyButton* CalculatorBase::createButton(const QString &text, const char *member)
 void CalculatorBase::digitClicked()
 {
     MyButton *clickedButton = qobject_cast<MyButton*>(sender());
-    if (!clickedButton) return;
 
     QString digit = clickedButton->text();
     QString currentText = m_display->text();
@@ -276,7 +275,7 @@ void CalculatorBase::digitClicked()
     // Если дисплей показывает "Error" - очищаем
     if (currentText == "Error") {
         clearAll();
-        currentText = "0";
+        currentText = m_display->text();
     }
 
     // Если ожидаем новый операнд (после операции)
@@ -284,31 +283,50 @@ void CalculatorBase::digitClicked()
         m_display->clear();
         m_display->setText(digit);
         m_waiting_for_operand = false;
+        m_newCalculation = false;
 
-        // Число уже будет добавлено при нажатии операции
+        // Обновляем выражение
+        updateExpressionWithCurrentNumber();
         updateHistoryDisplay();
         return;
     }
 
-    // Если это новое вычисление
+    // Если это новое вычисление (например, после = или clearAll)
     if (m_newCalculation) {
+        qDebug() << "CASE 2: New calculation";
         m_display->clear();
         m_display->setText(digit);
         m_expression.clear();
         m_newCalculation = false;
         m_waiting_for_operand = false;
+
+
+        updateExpressionWithCurrentNumber();
         updateHistoryDisplay();
+
         return;
     }
 
-    // Обычный ввод цифры
-    if (currentText == "0") {
+
+    // Если текущий текст "0", заменяем его
+    if (currentText == "0" && digit != "0") {
         m_display->setText(digit);
-    } else {
-        m_display->setText(currentText + digit);
+    }
+    // Если текущий текст "0" и нажата "0", ничего не делаем
+    else if (currentText == "0" && digit == "0") {
+        return;
+    }
+    // Обычное добавление цифры
+    else {
+        QString newText = currentText + digit;
+        m_display->setText(newText);
     }
 
+    // Обновляем текущее число в выражении
+    updateExpressionWithCurrentNumber();
     updateHistoryDisplay();
+
+
 }
 
 void CalculatorBase::pointClicked()
@@ -325,6 +343,7 @@ void CalculatorBase::pointClicked()
     if (m_waiting_for_operand) {
         m_display->setText("0.");
         m_waiting_for_operand = false;
+        updateExpressionWithCurrentNumber();
         updateHistoryDisplay();
         return;
     }
@@ -335,6 +354,7 @@ void CalculatorBase::pointClicked()
         m_expression.clear();
         m_newCalculation = false;
         m_waiting_for_operand = false;
+        updateExpressionWithCurrentNumber();
         updateHistoryDisplay();
         return;
     }
@@ -346,6 +366,7 @@ void CalculatorBase::pointClicked()
         } else {
             m_display->setText(currentText + ".");
         }
+        updateExpressionWithCurrentNumber();
         updateHistoryDisplay();
     }
 }
@@ -402,7 +423,7 @@ void CalculatorBase::changeSignClicked()
         m_display->setText("Error");
         return;
     }
-    double result = m_mathOps.changeSign(value);
+    double result = changeSign(value);
 
     m_display->clear();
     m_display->setText(formatNumberForDisplay(result));
@@ -534,6 +555,7 @@ void CalculatorBase::unaryOperatorClicked()
     if (!clickedButton) return;
 
     QString operation = clickedButton->text();
+    updateExpressionWithCurrentNumber();
     QString displayText = m_display->text();
 
     // Убираем "=" из отображения если есть
@@ -554,16 +576,16 @@ void CalculatorBase::unaryOperatorClicked()
     double result = 0.0;
 
     if (operation == "1/x") {
-        result = m_mathOps.reciprocal(operand);
+        result = reciprocal(operand);
     }
     else if (operation == "x²") {
-        result = m_mathOps.square(operand);
+        result = square(operand);
     }
     else if (operation == "√") {
-        result = m_mathOps.squareRoot(operand);
+        result = squareRoot(operand);
     }
     else if (operation == "%") {
-        result = m_mathOps.percent(operand);
+        result = percent(operand);
     }
 
     if (qIsNaN(result)) {
@@ -628,16 +650,16 @@ bool CalculatorBase::calculate(double operand)
     double result = 0.0;
 
     if (m_pending_operation == "+") {
-        result = m_mathOps.add(m_stored_value, operand);
+        result = add(m_stored_value, operand);
     }
     else if (m_pending_operation == "-") {
-        result = m_mathOps.subtract(m_stored_value, operand);
+        result = subtract(m_stored_value, operand);
     }
     else if (m_pending_operation == "×") {
-        result = m_mathOps.multiply(m_stored_value, operand);
+        result = multiply(m_stored_value, operand);
     }
     else if (m_pending_operation == "÷") {
-        result = m_mathOps.divide(m_stored_value, operand);
+        result = divide(m_stored_value, operand);
     }
 
     if (qIsNaN(result)) {
@@ -676,7 +698,7 @@ void CalculatorBase::equalClicked()
         }
     }
 
-    double result = m_mathOps.evaluateExpression(m_expression);
+    double result = evaluateExpression(m_expression);
 
     qDebug() << "Result from evaluateExpression:" << result;
 
@@ -786,12 +808,14 @@ void CalculatorBase::minToMemory()
 
 void CalculatorBase::updateExpressionWithCurrentNumber()
 {
-    qDebug() << "=== updateExpressionWithCurrentNumber ===";
+    qDebug() << "\n=== updateExpressionWithCurrentNumber START ===";
     qDebug() << "Display text:" << m_display->text();
+    qDebug() << "Expression size:" << m_expression.size();
 
     QString currentText = m_display->text();
-    if (currentText.isEmpty() || currentText == "Error") {
-        qDebug() << "Skipping - empty or Error";
+    if (currentText.isEmpty() || currentText == "Error" || currentText == "0") {
+        qDebug() << "Skipping - empty, Error, or 0";
+        qDebug() << "=== updateExpressionWithCurrentNumber END ===";
         return;
     }
 
@@ -799,14 +823,30 @@ void CalculatorBase::updateExpressionWithCurrentNumber()
     double value = currentText.toDouble(&ok);
     if (!ok) {
         qDebug() << "Skipping - not a valid number";
+        qDebug() << "=== updateExpressionWithCurrentNumber END ===";
         return;
     }
 
-    if (!m_expression.isEmpty() && !m_expression.last().isOperator) {
-        qDebug() << "Updating last value to:" << value;
+    qDebug() << "Value to add/update:" << value;
+
+    if (m_expression.isEmpty()) {
+        qDebug() << "Expression empty - adding first value";
+        m_expression.append({value, "", false});
+    } else if (!m_expression.last().isOperator) {
+        qDebug() << "Updating last value from" << m_expression.last().value << "to" << value;
         m_expression.last().value = value;
     } else {
-        qDebug() << "Adding new value:" << value;
+        qDebug() << "Last is operator - adding new value";
         m_expression.append({value, "", false});
     }
+
+    qDebug() << "Expression after update (size:" << m_expression.size() << "):";
+    for (int i = 0; i < m_expression.size(); ++i) {
+        if (m_expression[i].isOperator) {
+            qDebug() << "  [" << i << "] Operator:" << m_expression[i].operation;
+        } else {
+            qDebug() << "  [" << i << "] Value:" << m_expression[i].value;
+        }
+    }
+    qDebug() << "=== updateExpressionWithCurrentNumber END ===\n";
 }

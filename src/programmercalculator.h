@@ -2,9 +2,12 @@
 #define PROGRAMMERCALCULATOR_H
 
 #include "calculatorbase.h"
-#include <QLineEdit>
-#include <QButtonGroup>
-#include <QRadioButton>
+
+// Forward declarations
+class QLineEdit;
+class QButtonGroup;
+class QAbstractButton;
+class QHBoxLayout;
 
 class ProgrammerCalculator : public CalculatorBase
 {
@@ -38,8 +41,9 @@ protected:
     void setupProgrammerUI();
     void updateNumberSystemDisplays();
     void updateNumberSystemButtons();
-    void updateExpressionWithCurrentNumber();
+    void updateExpressionWithCurrentNumber() override;
 
+private:
     int m_current_base;
     QLineEdit *m_display_bin;
     QLineEdit *m_display_oct;

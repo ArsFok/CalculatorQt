@@ -1,8 +1,12 @@
-#include "calculator.h"
+#include "MainWindow.h"
+#include "calculatorbase.h"
+#include "scientificcalculator.h"
+#include "programmercalculator.h"
 #include "mybutton.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QButtonGroup>
+#include <QStackedWidget>
 #include <QDebug>
 
 Calculator::Calculator(QWidget *parent)

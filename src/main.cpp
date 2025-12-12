@@ -1,4 +1,4 @@
-#include "calculator.h"
+#include "MainWindow.h"
 #include <QApplication>
 #include <QDebug>
 

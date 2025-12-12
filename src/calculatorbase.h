@@ -5,7 +5,11 @@
 #include <QLineEdit>
 #include <QList>
 #include "mathoperations.h"
-#include "mybutton.h"
+
+// Forward declarations
+class MyButton;
+class QGridLayout;
+class QVBoxLayout;
 
 class CalculatorBase : public QWidget
 {
@@ -26,7 +30,6 @@ public slots:
     virtual void doubleOperandClicked();
     virtual void equalClicked();
 
-    // Виртуальные слоты для скобок
     virtual void leftParenClicked() {}
     virtual void rightParenClicked() {}
 
@@ -43,15 +46,16 @@ protected:
     bool calculate(double operand);
     void updateHistoryDisplay();
     void resetHistoryDisplay();
-    void updateExpressionWithCurrentNumber();
+    virtual void updateExpressionWithCurrentNumber();
 
+    QString formatNumberForDisplay(double value);
+
+protected:
     QLineEdit *m_display;
     QLineEdit *m_historyDisplay;
-    MathOperations m_mathOps;
 
     double m_sum_in_memory;
     QString m_pending_operation;
-    QString formatNumberForDisplay(double value);
     double m_stored_value;
     bool m_waiting_for_operand;
     double m_result;
