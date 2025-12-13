@@ -1,5 +1,5 @@
 #include "programmercalculator.h"
-#include "forms/ui_programmercalculator.h"
+#include "ui_programmercalculator.h"
 #include <QPushButton>
 #include <QRadioButton>
 #include <QLabel>
@@ -7,24 +7,20 @@
 
 ProgrammerCalculator::ProgrammerCalculator(QWidget *parent)
     : CalculatorBase(parent),
-      ui(new Ui::ProgrammerCalculator),
+      programmerUi(new Ui::ProgrammerCalculator),
       m_current_base(10)
 {
 }
 
 ProgrammerCalculator::~ProgrammerCalculator()
 {
-    delete ui;
+    delete programmerUi;
 }
 
-void ProgrammerCalculator::initialize()
-{
-    setupConnections();
-}
 
 void ProgrammerCalculator::setupUI()
 {
-    ui->setupUi(this);
+    programmerUi->setupUi(this);
 
     setStyleSheet(
         "ProgrammerCalculator {"
@@ -35,10 +31,10 @@ void ProgrammerCalculator::setupUI()
     );
 
     // Настраиваем дисплеи систем счисления
-    ui->display_bin->setReadOnly(true);
-    ui->display_oct->setReadOnly(true);
-    ui->display_dec->setReadOnly(true);
-    ui->display_hex->setReadOnly(true);
+    programmerUi->display_bin->setReadOnly(true);
+    programmerUi->display_oct->setReadOnly(true);
+    programmerUi->display_dec->setReadOnly(true);
+    programmerUi->display_hex->setReadOnly(true);
 
     setupConnections();
     updateNumberSystemButtons();
@@ -51,22 +47,22 @@ void ProgrammerCalculator::setupConnections()
     CalculatorBase::setupConnections();
 
     // Подключаем дополнительные кнопки
-    connect(ui->buttonA, &QPushButton::clicked, this, &ProgrammerCalculator::numberSystemDigitClicked);
-    connect(ui->buttonB, &QPushButton::clicked, this, &ProgrammerCalculator::numberSystemDigitClicked);
-    connect(ui->buttonC, &QPushButton::clicked, this, &ProgrammerCalculator::numberSystemDigitClicked);
-    connect(ui->buttonD, &QPushButton::clicked, this, &ProgrammerCalculator::numberSystemDigitClicked);
-    connect(ui->buttonE, &QPushButton::clicked, this, &ProgrammerCalculator::numberSystemDigitClicked);
-    connect(ui->buttonF, &QPushButton::clicked, this, &ProgrammerCalculator::numberSystemDigitClicked);
+    connect(programmerUi->buttonA, &QPushButton::clicked, this, &ProgrammerCalculator::numberSystemDigitClicked);
+    connect(programmerUi->buttonB, &QPushButton::clicked, this, &ProgrammerCalculator::numberSystemDigitClicked);
+    connect(programmerUi->buttonC, &QPushButton::clicked, this, &ProgrammerCalculator::numberSystemDigitClicked);
+    connect(programmerUi->buttonD, &QPushButton::clicked, this, &ProgrammerCalculator::numberSystemDigitClicked);
+    connect(programmerUi->buttonE, &QPushButton::clicked, this, &ProgrammerCalculator::numberSystemDigitClicked);
+    connect(programmerUi->buttonF, &QPushButton::clicked, this, &ProgrammerCalculator::numberSystemDigitClicked);
 
     // Подключаем радиокнопки систем счисления
-    connect(ui->binRadio, &QRadioButton::clicked, this, &ProgrammerCalculator::onBaseGroupButtonClicked);
-    connect(ui->octRadio, &QRadioButton::clicked, this, &ProgrammerCalculator::onBaseGroupButtonClicked);
-    connect(ui->decRadio, &QRadioButton::clicked, this, &ProgrammerCalculator::onBaseGroupButtonClicked);
-    connect(ui->hexRadio, &QRadioButton::clicked, this, &ProgrammerCalculator::onBaseGroupButtonClicked);
+    connect(programmerUi->binRadio, &QRadioButton::clicked, this, &ProgrammerCalculator::onBaseGroupButtonClicked);
+    connect(programmerUi->octRadio, &QRadioButton::clicked, this, &ProgrammerCalculator::onBaseGroupButtonClicked);
+    connect(programmerUi->decRadio, &QRadioButton::clicked, this, &ProgrammerCalculator::onBaseGroupButtonClicked);
+    connect(programmerUi->hexRadio, &QRadioButton::clicked, this, &ProgrammerCalculator::onBaseGroupButtonClicked);
 
     // Скобки
-    connect(ui->leftParenButton, &QPushButton::clicked, this, &ProgrammerCalculator::leftParenClicked);
-    connect(ui->rightParenButton, &QPushButton::clicked, this, &ProgrammerCalculator::rightParenClicked);
+    connect(programmerUi->leftParenButton, &QPushButton::clicked, this, &ProgrammerCalculator::leftParenClicked);
+    connect(programmerUi->rightParenButton, &QPushButton::clicked, this, &ProgrammerCalculator::rightParenClicked);
 }
 
 
@@ -80,7 +76,7 @@ void ProgrammerCalculator::unaryOperatorClicked()
     // Обновляем текущее число в выражении
     updateExpressionWithCurrentNumber();
 
-    QString displayText = ui->display->text();
+    QString displayText = programmerUi->display->text();
 
     // Убираем "=" из отображения если есть
     if (displayText.contains("=")) {
@@ -102,7 +98,7 @@ void ProgrammerCalculator::unaryOperatorClicked()
     }
 
     if (!ok) {
-        ui->display->setText("Error");
+        programmerUi->display->setText("Error");
         updateNumberSystemDisplays();
         return;
     }
@@ -114,7 +110,7 @@ void ProgrammerCalculator::unaryOperatorClicked()
     }
 
     if (qIsNaN(result)) {
-        ui->display->setText("Error");
+        programmerUi->display->setText("Error");
         updateNumberSystemDisplays();
         return;
     }
@@ -129,7 +125,7 @@ void ProgrammerCalculator::unaryOperatorClicked()
     }
 
     // Отображаем результат
-    ui->display->setText(formattedResult);
+    programmerUi->display->setText(formattedResult);
 
     // Обновляем выражение
     if (!m_expression.isEmpty()) {
@@ -147,15 +143,15 @@ void ProgrammerCalculator::unaryOperatorClicked()
 
 void ProgrammerCalculator::clear()
 {
-    ui->display->clear();
+    programmerUi->display->clear();
     m_waiting_for_operand = true;
     updateNumberSystemDisplays();
 }
 
 void ProgrammerCalculator::clearAll()
 {
-    ui->display->setText("0");
-    ui->historyDisplay->setText("0");
+    programmerUi->display->setText("0");
+    programmerUi->historyDisplay->setText("0");
     m_expression.clear();
     m_stored_value = 0.0;
     m_result = 0.0;
@@ -167,9 +163,9 @@ void ProgrammerCalculator::clearAll()
 
 void ProgrammerCalculator::backspaceClicked()
 {
-    QString text = ui->display->text();
+    QString text = programmerUi->display->text();
     if (text.isEmpty() || text == "0" || m_waiting_for_operand) {
-        ui->display->setText("0");
+        programmerUi->display->setText("0");
         m_waiting_for_operand = true;
         updateNumberSystemDisplays();
         return;
@@ -177,10 +173,10 @@ void ProgrammerCalculator::backspaceClicked()
 
     text.chop(1);
     if (text.isEmpty()) {
-        ui->display->setText("0");
+        programmerUi->display->setText("0");
         m_waiting_for_operand = true;
     } else {
-        ui->display->setText(text);
+        programmerUi->display->setText(text);
     }
     updateNumberSystemDisplays();
 }
@@ -190,9 +186,9 @@ void ProgrammerCalculator::equalClicked()
     updateExpressionWithCurrentNumber();
 
     if (m_expression.isEmpty()) {
-        QString currentText = ui->display->text();
+        QString currentText = programmerUi->display->text();
         if (currentText.isEmpty() || currentText == "Error") {
-            ui->display->setText("0");
+            programmerUi->display->setText("0");
         }
         m_waiting_for_operand = true;
         m_newCalculation = true;
@@ -203,8 +199,8 @@ void ProgrammerCalculator::equalClicked()
     double result = evaluateExpression(m_expression);
 
     if (qIsNaN(result) || qIsInf(result)) {
-        ui->display->setText("Error");
-        ui->historyDisplay->setText("Error");
+        programmerUi->display->setText("Error");
+        programmerUi->historyDisplay->setText("Error");
         m_expression.clear();
         m_waiting_for_operand = true;
         m_newCalculation = true;
@@ -221,7 +217,7 @@ void ProgrammerCalculator::equalClicked()
         formattedResult = QString::number(intResult, m_current_base).toUpper();
     }
 
-    ui->display->setText(formattedResult);
+    programmerUi->display->setText(formattedResult);
 
     // Показываем всё выражение и результат в истории
     QString historyText;
@@ -243,7 +239,7 @@ void ProgrammerCalculator::equalClicked()
         }
     }
     historyText += " = " + formattedResult;
-    ui->historyDisplay->setText(historyText.trimmed());
+    programmerUi->historyDisplay->setText(historyText.trimmed());
 
     // Сохраняем результат для возможного продолжения
     m_result = result;
@@ -263,9 +259,9 @@ void ProgrammerCalculator::bitwiseOperationClicked()
     QString operation = clickedButton->text();
 
     bool ok;
-    long currentValue = ui->display->text().toLong(&ok, m_current_base);
+    long currentValue = programmerUi->display->text().toLong(&ok, m_current_base);
     if (!ok) {
-        ui->display->setText("Error");
+        programmerUi->display->setText("Error");
         updateNumberSystemDisplays();
         return;
     }
@@ -292,7 +288,7 @@ void ProgrammerCalculator::bitwiseOperationClicked()
         result = currentValue >> 1;
     }
 
-    ui->display->setText(QString::number(result, m_current_base).toUpper());
+    programmerUi->display->setText(QString::number(result, m_current_base).toUpper());
     updateNumberSystemDisplays();
 }
 
@@ -328,12 +324,12 @@ void ProgrammerCalculator::numberSystemDigitClicked()
 
 void ProgrammerCalculator::pointClicked()
 {
-    QString currentText = ui->display->text();
+    QString currentText = programmerUi->display->text();
 
     if (currentText.isEmpty() || currentText == "0" || m_waiting_for_operand) {
-        ui->display->setText("0,");
+        programmerUi->display->setText("0,");
     } else if (!currentText.contains(',')) {
-        ui->display->setText(currentText + ",");
+        programmerUi->display->setText(currentText + ",");
     }
 
     updateNumberSystemDisplays();
@@ -341,7 +337,7 @@ void ProgrammerCalculator::pointClicked()
 
 void ProgrammerCalculator::changeSignClicked()
 {
-    QString text = ui->display->text();
+    QString text = programmerUi->display->text();
     if (text.isEmpty()) {
         text = "0";
     }
@@ -357,7 +353,7 @@ void ProgrammerCalculator::changeSignClicked()
     }
 
     if (!ok) {
-        ui->display->setText("Error");
+        programmerUi->display->setText("Error");
         updateNumberSystemDisplays();
         return;
     }
@@ -372,30 +368,30 @@ void ProgrammerCalculator::changeSignClicked()
         formattedResult = QString::number(intResult, m_current_base).toUpper();
     }
 
-    ui->display->setText(formattedResult);
+    programmerUi->display->setText(formattedResult);
     updateNumberSystemDisplays();
 }
 
 void ProgrammerCalculator::onBaseGroupButtonClicked()
 {
-    if (ui->binRadio->isChecked()) m_current_base = 2;
-    else if (ui->octRadio->isChecked()) m_current_base = 8;
-    else if (ui->decRadio->isChecked()) m_current_base = 10;
-    else if (ui->hexRadio->isChecked()) m_current_base = 16;
+    if (programmerUi->binRadio->isChecked()) m_current_base = 2;
+    else if (programmerUi->octRadio->isChecked()) m_current_base = 8;
+    else if (programmerUi->decRadio->isChecked()) m_current_base = 10;
+    else if (programmerUi->hexRadio->isChecked()) m_current_base = 16;
 
-    QString currentText = ui->display->text();
+    QString currentText = programmerUi->display->text();
     if (currentText != "0" && currentText != "Error") {
         bool ok;
         long long value = currentText.toLongLong(&ok, m_current_base);
         if (ok) {
             if (m_current_base == 10) {
-                ui->display->setText(QString::number(value));
+                programmerUi->display->setText(QString::number(value));
             } else {
-                ui->display->setText(QString::number(value, m_current_base).toUpper());
+                programmerUi->display->setText(QString::number(value, m_current_base).toUpper());
             }
         }
     } else {
-        ui->display->setText("0");
+        programmerUi->display->setText("0");
     }
 
     updateNumberSystemButtons();
@@ -404,13 +400,13 @@ void ProgrammerCalculator::onBaseGroupButtonClicked()
 
 void ProgrammerCalculator::updateNumberSystemDisplays()
 {
-    QString input = ui->display->text();
+    QString input = programmerUi->display->text();
 
     if (input.isEmpty() || input == "Error" || input == "0") {
-        ui->display_bin->setText("0");
-        ui->display_oct->setText("0");
-        ui->display_dec->setText("0");
-        ui->display_hex->setText("0");
+        programmerUi->display_bin->setText("0");
+        programmerUi->display_oct->setText("0");
+        programmerUi->display_dec->setText("0");
+        programmerUi->display_hex->setText("0");
         return;
     }
 
@@ -426,17 +422,17 @@ void ProgrammerCalculator::updateNumberSystemDisplays()
     }
 
     if (!ok) {
-        ui->display_bin->setText("Error");
-        ui->display_oct->setText("Error");
-        ui->display_dec->setText("Error");
-        ui->display_hex->setText("Error");
+        programmerUi->display_bin->setText("Error");
+        programmerUi->display_oct->setText("Error");
+        programmerUi->display_dec->setText("Error");
+        programmerUi->display_hex->setText("Error");
         return;
     }
 
-    ui->display_bin->setText(QString::number(num, 2));
-    ui->display_oct->setText(QString::number(num, 8));
-    ui->display_dec->setText(QString::number(num, 10));
-    ui->display_hex->setText(QString::number(num, 16).toUpper());
+    programmerUi->display_bin->setText(QString::number(num, 2));
+    programmerUi->display_oct->setText(QString::number(num, 8));
+    programmerUi->display_dec->setText(QString::number(num, 10));
+    programmerUi->display_hex->setText(QString::number(num, 16).toUpper());
 }
 
 void ProgrammerCalculator::updateNumberSystemButtons()
@@ -446,17 +442,17 @@ void ProgrammerCalculator::updateNumberSystemButtons()
     bool binMode = (m_current_base == 2);
 
     // Включаем/выключаем кнопки A-F
-    ui->buttonA->setEnabled(hexMode);
-    ui->buttonB->setEnabled(hexMode);
-    ui->buttonC->setEnabled(hexMode);
-    ui->buttonD->setEnabled(hexMode);
-    ui->buttonE->setEnabled(hexMode);
-    ui->buttonF->setEnabled(hexMode);
+    programmerUi->buttonA->setEnabled(hexMode);
+    programmerUi->buttonB->setEnabled(hexMode);
+    programmerUi->buttonC->setEnabled(hexMode);
+    programmerUi->buttonD->setEnabled(hexMode);
+    programmerUi->buttonE->setEnabled(hexMode);
+    programmerUi->buttonF->setEnabled(hexMode);
 
     // Включаем/выключаем цифровые кнопки
     QList<QPushButton*> digitButtons = {
-        ui->button0, ui->button1, ui->button2, ui->button3, ui->button4,
-        ui->button5, ui->button6, ui->button7, ui->button8, ui->button9
+        programmerUi->button0, programmerUi->button1, programmerUi->button2, programmerUi->button3, programmerUi->button4,
+        programmerUi->button5, programmerUi->button6, programmerUi->button7, programmerUi->button8, programmerUi->button9
     };
 
     for (int i = 0; i < digitButtons.size(); ++i) {
@@ -472,7 +468,7 @@ void ProgrammerCalculator::updateNumberSystemButtons()
 
 void ProgrammerCalculator::updateExpressionWithCurrentNumber()
 {
-    QString currentText = ui->display->text();
+    QString currentText = programmerUi->display->text();
     if (currentText.isEmpty() || currentText == "Error") {
         return;
     }

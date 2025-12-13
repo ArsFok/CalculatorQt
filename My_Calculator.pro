@@ -26,7 +26,6 @@ HEADERS += \
 
 CONFIG += c++11
 
-# Папка для сгенерированных ui_*.h файлов
 UI_DIR = src/forms
 MOC_DIR = src/moc
 OBJECTS_DIR = src/obj

@@ -45,9 +45,9 @@ Calculator::Calculator(QWidget *parent)
     ProgrammerCalculator *programmerCalculator = new ProgrammerCalculator();
 
     // Инициализируем калькуляторы (после создания UI)
-    basicCalculator->initialize();
-    scientificCalculator->initialize();
-    programmerCalculator->initialize();
+    basicCalculator->setupCalculator();
+    scientificCalculator->setupCalculator();
+    programmerCalculator->setupCalculator();
 
     // Добавляем в stacked widget
     m_stackedWidget->addWidget(basicCalculator);

@@ -16,8 +16,7 @@ public:
     explicit CalculatorBase(QWidget *parent = nullptr);
     virtual ~CalculatorBase();
 
-    // Метод для завершения инициализации
-    virtual void initialize();
+    void setupCalculator();
 
 public slots:
     virtual void digitClicked();
@@ -49,6 +48,8 @@ protected:
 
     virtual void handleDigitClick(QString digit);
     virtual void handleOperatorClick(QString operation);
+
+    Ui::CalculatorBase* getUI() { return ui; }
 
 protected:
     Ui::CalculatorBase *ui;

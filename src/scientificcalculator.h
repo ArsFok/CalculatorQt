@@ -15,7 +15,8 @@ public:
     explicit ScientificCalculator(QWidget *parent = nullptr);
     ~ScientificCalculator();
 
-    void initialize() override;
+    void setupUI() override;
+    void setupConnections() override;
 
 public slots:
     void sinClicked();
@@ -38,12 +39,9 @@ public slots:
     void leftParenClicked() override;
     void rightParenClicked() override;
 
-protected:
-    void setupUI() override;
-    void setupConnections() override;
 
 private:
-    Ui::ScientificCalculator *ui;
+    Ui::ScientificCalculator *scientificUi;
 };
 
 #endif // SCIENTIFICCALCULATOR_H

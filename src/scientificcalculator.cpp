@@ -1,27 +1,23 @@
 #include "scientificcalculator.h"
-#include "forms/ui_scientificcalculator.h"
+#include "ui_scientificcalculator.h"
 #include <QPushButton>
 #include <QDebug>
 
 ScientificCalculator::ScientificCalculator(QWidget *parent)
     : CalculatorBase(parent),
-      ui(new Ui::ScientificCalculator)
+      scientificUi(new Ui::ScientificCalculator)
 {
 }
 
 ScientificCalculator::~ScientificCalculator()
 {
-    delete ui;
-}
-
-void ScientificCalculator::initialize()
-{
-    setupConnections();
+    delete scientificUi;
 }
 
 void ScientificCalculator::setupUI()
 {
-    ui->setupUi(this);
+    scientificUi->setupUi(this);
+
 
     setStyleSheet(
         "ScientificCalculator {"
@@ -38,72 +34,72 @@ void ScientificCalculator::setupConnections()
     CalculatorBase::setupConnections();
 
     // Научные функции
-    if (ui->sinButton) {
-        connect(ui->sinButton, &QPushButton::clicked, this, &ScientificCalculator::sinClicked);
+    if (scientificUi->sinButton) {
+        connect(scientificUi->sinButton, &QPushButton::clicked, this, &ScientificCalculator::sinClicked);
     }
-    if (ui->cosButton) {
-        connect(ui->cosButton, &QPushButton::clicked, this, &ScientificCalculator::cosClicked);
+    if (scientificUi->cosButton) {
+        connect(scientificUi->cosButton, &QPushButton::clicked, this, &ScientificCalculator::cosClicked);
     }
-    if (ui->tanButton) {
-        connect(ui->tanButton, &QPushButton::clicked, this, &ScientificCalculator::tanClicked);
+    if (scientificUi->tanButton) {
+        connect(scientificUi->tanButton, &QPushButton::clicked, this, &ScientificCalculator::tanClicked);
     }
-    if (ui->ctanButton) {
-        connect(ui->ctanButton, &QPushButton::clicked, this, &ScientificCalculator::ctanClicked);
-    }
-
-    if (ui->logButton) {
-        connect(ui->logButton, &QPushButton::clicked, this, &ScientificCalculator::logClicked);
-    }
-    if (ui->lnButton) {
-        connect(ui->lnButton, &QPushButton::clicked, this, &ScientificCalculator::lnClicked);
+    if (scientificUi->ctanButton) {
+        connect(scientificUi->ctanButton, &QPushButton::clicked, this, &ScientificCalculator::ctanClicked);
     }
 
-    if (ui->factorialButton) {
-        connect(ui->factorialButton, &QPushButton::clicked, this, &ScientificCalculator::factorialClicked);
+    if (scientificUi->logButton) {
+        connect(scientificUi->logButton, &QPushButton::clicked, this, &ScientificCalculator::logClicked);
     }
-    if (ui->powerButton) {
-        connect(ui->powerButton, &QPushButton::clicked, this, &ScientificCalculator::powerClicked);
-    }
-    if (ui->tenPowerButton) {
-        connect(ui->tenPowerButton, &QPushButton::clicked, this, &ScientificCalculator::TenInXClicked);
-    }
-    if (ui->absButton) {
-        connect(ui->absButton, &QPushButton::clicked, this, &ScientificCalculator::modulClicked);
-    }
-    if (ui->modButton) {
-        connect(ui->modButton, &QPushButton::clicked, this, &ScientificCalculator::modClicked);
+    if (scientificUi->lnButton) {
+        connect(scientificUi->lnButton, &QPushButton::clicked, this, &ScientificCalculator::lnClicked);
     }
 
-    if (ui->piButton) {
-        connect(ui->piButton, &QPushButton::clicked, this, &ScientificCalculator::piClicked);
+    if (scientificUi->factorialButton) {
+        connect(scientificUi->factorialButton, &QPushButton::clicked, this, &ScientificCalculator::factorialClicked);
     }
-    if (ui->eButton) {
-        connect(ui->eButton, &QPushButton::clicked, this, &ScientificCalculator::eClicked);
+    if (scientificUi->powerButton) {
+        connect(scientificUi->powerButton, &QPushButton::clicked, this, &ScientificCalculator::powerClicked);
+    }
+    if (scientificUi->tenPowerButton) {
+        connect(scientificUi->tenPowerButton, &QPushButton::clicked, this, &ScientificCalculator::TenInXClicked);
+    }
+    if (scientificUi->absButton) {
+        connect(scientificUi->absButton, &QPushButton::clicked, this, &ScientificCalculator::modulClicked);
+    }
+    if (scientificUi->modButton) {
+        connect(scientificUi->modButton, &QPushButton::clicked, this, &ScientificCalculator::modClicked);
     }
 
-    if (ui->leftParenButton) {
-        connect(ui->leftParenButton, &QPushButton::clicked, this, &ScientificCalculator::leftParenClicked);
+    if (scientificUi->piButton) {
+        connect(scientificUi->piButton, &QPushButton::clicked, this, &ScientificCalculator::piClicked);
     }
-    if (ui->rightParenButton) {
-        connect(ui->rightParenButton, &QPushButton::clicked, this, &ScientificCalculator::rightParenClicked);
+    if (scientificUi->eButton) {
+        connect(scientificUi->eButton, &QPushButton::clicked, this, &ScientificCalculator::eClicked);
+    }
+
+    if (scientificUi->leftParenButton) {
+        connect(scientificUi->leftParenButton, &QPushButton::clicked, this, &ScientificCalculator::leftParenClicked);
+    }
+    if (scientificUi->rightParenButton) {
+        connect(scientificUi->rightParenButton, &QPushButton::clicked, this, &ScientificCalculator::rightParenClicked);
     }
 }
 
 void ScientificCalculator::sinClicked()
 {
     bool ok;
-    double value = ui->display->text().toDouble(&ok);
+    double value = scientificUi->display->text().toDouble(&ok);
     if (!ok) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     double result = sinDeg(value);
     if (qIsNaN(result)) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     QString formattedResult = formatNumberForDisplay(result);
-    ui->display->setText(formattedResult);
+    scientificUi->display->setText(formattedResult);
 
     m_expression.clear();
     m_expression.append({result, "", false});
@@ -116,18 +112,18 @@ void ScientificCalculator::sinClicked()
 void ScientificCalculator::cosClicked()
 {
     bool ok;
-    double value = ui->display->text().toDouble(&ok);
+    double value = scientificUi->display->text().toDouble(&ok);
     if (!ok) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     double result = cosDeg(value);
     if (qIsNaN(result)) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     QString formattedResult = formatNumberForDisplay(result);
-    ui->display->setText(formattedResult);
+    scientificUi->display->setText(formattedResult);
 
     m_expression.clear();
     m_expression.append({result, "", false});
@@ -140,18 +136,18 @@ void ScientificCalculator::cosClicked()
 void ScientificCalculator::tanClicked()
 {
     bool ok;
-    double value = ui->display->text().toDouble(&ok);
+    double value = scientificUi->display->text().toDouble(&ok);
     if (!ok) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     double result = tanDeg(value);
     if (qIsNaN(result)) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     QString formattedResult = formatNumberForDisplay(result);
-    ui->display->setText(formattedResult);
+    scientificUi->display->setText(formattedResult);
 
     m_expression.clear();
     m_expression.append({result, "", false});
@@ -164,18 +160,18 @@ void ScientificCalculator::tanClicked()
 void ScientificCalculator::ctanClicked()
 {
     bool ok;
-    double value = ui->display->text().toDouble(&ok);
+    double value = scientificUi->display->text().toDouble(&ok);
     if (!ok) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     double result = ctanDeg(value);
     if (qIsNaN(result)) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     QString formattedResult = formatNumberForDisplay(result);
-    ui->display->setText(formattedResult);
+    scientificUi->display->setText(formattedResult);
 
     m_expression.clear();
     m_expression.append({result, "", false});
@@ -188,18 +184,18 @@ void ScientificCalculator::ctanClicked()
 void ScientificCalculator::logClicked()
 {
     bool ok;
-    double value = ui->display->text().toDouble(&ok);
+    double value = scientificUi->display->text().toDouble(&ok);
     if (!ok) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     double result = log10Func(value);
     if (qIsNaN(result)) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     QString formattedResult = formatNumberForDisplay(result);
-    ui->display->setText(formattedResult);
+    scientificUi->display->setText(formattedResult);
 
     m_expression.clear();
     m_expression.append({result, "", false});
@@ -212,18 +208,18 @@ void ScientificCalculator::logClicked()
 void ScientificCalculator::lnClicked()
 {
     bool ok;
-    double value = ui->display->text().toDouble(&ok);
+    double value = scientificUi->display->text().toDouble(&ok);
     if (!ok) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     double result = lnFunc(value);
     if (qIsNaN(result)) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     QString formattedResult = formatNumberForDisplay(result);
-    ui->display->setText(formattedResult);
+    scientificUi->display->setText(formattedResult);
 
     m_expression.clear();
     m_expression.append({result, "", false});
@@ -236,18 +232,18 @@ void ScientificCalculator::lnClicked()
 void ScientificCalculator::factorialClicked()
 {
     bool ok;
-    int value = ui->display->text().toInt(&ok);
+    int value = scientificUi->display->text().toInt(&ok);
     if (!ok || value < 0) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     double result = factorial(value);
     if (qIsNaN(result)) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     QString formattedResult = formatNumberForDisplay(result);
-    ui->display->setText(formattedResult);
+    scientificUi->display->setText(formattedResult);
 
     m_expression.clear();
     m_expression.append({result, "", false});
@@ -259,7 +255,7 @@ void ScientificCalculator::factorialClicked()
 
 void ScientificCalculator::powerClicked()
 {
-    QString text = ui->display->text();
+    QString text = scientificUi->display->text();
     if (text.isEmpty()) {
         text = "0";
     }
@@ -267,7 +263,7 @@ void ScientificCalculator::powerClicked()
     bool ok;
     double base = text.toDouble(&ok);
     if (!ok) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
 
@@ -280,7 +276,7 @@ void ScientificCalculator::powerClicked()
     m_expression.append({0.0, "^", true});
 
     updateHistoryDisplay();
-    ui->display->clear();
+    scientificUi->display->clear();
     m_waiting_for_operand = true;
     m_newCalculation = false;
 }
@@ -288,14 +284,14 @@ void ScientificCalculator::powerClicked()
 void ScientificCalculator::TenInXClicked()
 {
     bool ok;
-    double exponent = ui->display->text().toDouble(&ok);
+    double exponent = scientificUi->display->text().toDouble(&ok);
     if (!ok) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     double result = powerOf10(exponent);
     QString formattedResult = formatNumberForDisplay(result);
-    ui->display->setText(formattedResult);
+    scientificUi->display->setText(formattedResult);
 
     m_expression.clear();
     m_expression.append({result, "", false});
@@ -308,14 +304,14 @@ void ScientificCalculator::TenInXClicked()
 void ScientificCalculator::modulClicked()
 {
     bool ok;
-    double value = ui->display->text().toDouble(&ok);
+    double value = scientificUi->display->text().toDouble(&ok);
     if (!ok) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
     double result = absolute(value);
     QString formattedResult = formatNumberForDisplay(result);
-    ui->display->setText(formattedResult);
+    scientificUi->display->setText(formattedResult);
 
     m_expression.clear();
     m_expression.append({result, "", false});
@@ -327,7 +323,7 @@ void ScientificCalculator::modulClicked()
 
 void ScientificCalculator::modClicked()
 {
-    QString text = ui->display->text();
+    QString text = scientificUi->display->text();
     if (text.isEmpty()) {
         text = "0";
     }
@@ -335,7 +331,7 @@ void ScientificCalculator::modClicked()
     bool ok;
     double value = text.toDouble(&ok);
     if (!ok) {
-        ui->display->setText("Error");
+        scientificUi->display->setText("Error");
         return;
     }
 
@@ -348,19 +344,19 @@ void ScientificCalculator::modClicked()
     m_expression.append({0.0, "mod", true});
 
     updateHistoryDisplay();
-    ui->display->clear();
+    scientificUi->display->clear();
     m_waiting_for_operand = true;
     m_newCalculation = true;
 }
 
 void ScientificCalculator::piClicked()
 {
-    ui->display->clear();
+    scientificUi->display->clear();
     m_expression.clear();
 
     double piValue = MATH_PI;
     QString piStr = formatNumberForDisplay(piValue);
-    ui->display->setText(piStr);
+    scientificUi->display->setText(piStr);
 
     m_expression.append({piValue, "", false});
 
@@ -371,12 +367,12 @@ void ScientificCalculator::piClicked()
 
 void ScientificCalculator::eClicked()
 {
-    ui->display->clear();
+    scientificUi->display->clear();
     m_expression.clear();
 
     double eValue = MATH_E;
     QString eStr = formatNumberForDisplay(eValue);
-    ui->display->setText(eStr);
+    scientificUi->display->setText(eStr);
 
     m_expression.append({eValue, "", false});
 
@@ -387,7 +383,7 @@ void ScientificCalculator::eClicked()
 
 void ScientificCalculator::leftParenClicked()
 {
-    QString currentText = ui->display->text();
+    QString currentText = scientificUi->display->text();
 
     if (currentText == "Error") {
         clearAll();
@@ -417,7 +413,7 @@ void ScientificCalculator::leftParenClicked()
     }
 
     updateHistoryDisplay();
-    ui->display->clear();
+    scientificUi->display->clear();
     m_waiting_for_operand = true;
     m_newCalculation = false;
 }
@@ -442,6 +438,6 @@ void ScientificCalculator::rightParenClicked()
     m_expression.append({0.0, ")", true});
 
     updateHistoryDisplay();
-    ui->display->clear();
+    scientificUi->display->clear();
     m_waiting_for_operand = false;
 }

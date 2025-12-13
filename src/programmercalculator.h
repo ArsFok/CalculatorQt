@@ -16,7 +16,8 @@ public:
     explicit ProgrammerCalculator(QWidget *parent = nullptr);
     ~ProgrammerCalculator();
 
-    void initialize() override;
+    void setupUI() override;
+    void setupConnections() override;
 
     // Переопределенные методы
     void digitClicked() override;
@@ -37,14 +38,12 @@ public slots:
     void rightParenClicked() override;
 
 protected:
-    void setupUI() override;
-    void setupConnections() override;
     void updateNumberSystemDisplays();
     void updateNumberSystemButtons();
     void updateExpressionWithCurrentNumber() override;
 
 private:
-    Ui::ProgrammerCalculator *ui;
+    Ui::ProgrammerCalculator *programmerUi;
     int m_current_base;
 };
 

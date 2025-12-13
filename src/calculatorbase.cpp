@@ -1,5 +1,5 @@
 #include "calculatorbase.h"
-#include "forms/ui_basiccalculator.h"
+#include "ui_basiccalculator.h"
 #include <QPushButton>
 #include <QDebug>
 
@@ -21,8 +21,9 @@ CalculatorBase::~CalculatorBase()
     delete ui;
 }
 
-void CalculatorBase::initialize()
+void CalculatorBase::setupCalculator()
 {
+    setupUI();
     setupConnections();
 }
 
