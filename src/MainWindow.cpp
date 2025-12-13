@@ -67,7 +67,6 @@ Calculator::Calculator(QWidget *parent)
 
 Calculator::~Calculator()
 {
-    // Qt автоматически удалит дочерние виджеты
 }
 
 QLayout* Calculator::createNavigation()

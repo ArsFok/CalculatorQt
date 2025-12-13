@@ -15,7 +15,6 @@ public:
     explicit ScientificCalculator(QWidget *parent = nullptr);
     ~ScientificCalculator();
 
-    // Метод для завершения инициализации
     void initialize() override;
 
 public slots:

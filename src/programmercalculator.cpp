@@ -69,7 +69,6 @@ void ProgrammerCalculator::setupConnections()
     connect(ui->rightParenButton, &QPushButton::clicked, this, &ProgrammerCalculator::rightParenClicked);
 }
 
-// ДОБАВИМ НЕДОСТАЮЩИЕ МЕТОДЫ:
 
 void ProgrammerCalculator::unaryOperatorClicked()
 {
@@ -256,7 +255,6 @@ void ProgrammerCalculator::equalClicked()
     updateNumberSystemDisplays();
 }
 
-// ДОБАВИМ РЕАЛИЗАЦИЮ bitwiseOperationClicked():
 void ProgrammerCalculator::bitwiseOperationClicked()
 {
     QPushButton *clickedButton = qobject_cast<QPushButton*>(sender());
@@ -298,7 +296,6 @@ void ProgrammerCalculator::bitwiseOperationClicked()
     updateNumberSystemDisplays();
 }
 
-// Остальные методы из первого файла (они уже есть):
 void ProgrammerCalculator::digitClicked()
 {
     CalculatorBase::digitClicked();

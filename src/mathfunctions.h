@@ -73,13 +73,11 @@ inline double modulus(double a, double b) {
     return std::fmod(a, b);
 }
 
-// Функции, которые будут в .cpp
 double lnFunc(double x);
 double ctanDeg(double x);
 double factorial(int n);
 double evaluateExpression(const QList<CalculationNode>& expr);
 
-// Вспомогательные
 int getPriority(const QString& op);
 double applyOperation(double a, double b, const QString& op);
 bool isMathOperator(const QString& token);

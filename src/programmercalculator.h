@@ -16,7 +16,6 @@ public:
     explicit ProgrammerCalculator(QWidget *parent = nullptr);
     ~ProgrammerCalculator();
 
-    // Метод для завершения инициализации
     void initialize() override;
 
     // Переопределенные методы
