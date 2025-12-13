@@ -2,12 +2,11 @@
 #define PROGRAMMERCALCULATOR_H
 
 #include "calculatorbase.h"
+#include <QLineEdit>
 
-// Forward declarations
-class QLineEdit;
-class QButtonGroup;
-class QAbstractButton;
-class QHBoxLayout;
+namespace Ui {
+class ProgrammerCalculator;
+}
 
 class ProgrammerCalculator : public CalculatorBase
 {
@@ -15,9 +14,12 @@ class ProgrammerCalculator : public CalculatorBase
 
 public:
     explicit ProgrammerCalculator(QWidget *parent = nullptr);
-    ~ProgrammerCalculator() override = default;
+    ~ProgrammerCalculator();
 
-    // Переопределенные методы из CalculatorBase
+    // Метод для завершения инициализации
+    void initialize() override;
+
+    // Переопределенные методы
     void digitClicked() override;
     void pointClicked() override;
     void changeSignClicked() override;
@@ -31,31 +33,20 @@ public:
 public slots:
     void numberSystemDigitClicked();
     void bitwiseOperationClicked();
-    void onBaseGroupButtonClicked(QAbstractButton* button);
-
-    // Слоты для скобок
+    void onBaseGroupButtonClicked();
     void leftParenClicked() override;
     void rightParenClicked() override;
 
 protected:
-    void setupProgrammerUI();
+    void setupUI() override;
+    void setupConnections() override;
     void updateNumberSystemDisplays();
     void updateNumberSystemButtons();
     void updateExpressionWithCurrentNumber() override;
 
 private:
+    Ui::ProgrammerCalculator *ui;
     int m_current_base;
-    QLineEdit *m_display_bin;
-    QLineEdit *m_display_oct;
-    QLineEdit *m_display_dec;
-    QLineEdit *m_display_hex;
-
-    MyButton *m_buttonA;
-    MyButton *m_buttonB;
-    MyButton *m_buttonC;
-    MyButton *m_buttonD;
-    MyButton *m_buttonE;
-    MyButton *m_buttonF;
 };
 
 #endif // PROGRAMMERCALCULATOR_H

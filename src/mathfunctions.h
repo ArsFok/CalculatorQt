@@ -1,5 +1,5 @@
-#ifndef MATHOPERATIONS_H
-#define MATHOPERATIONS_H
+#ifndef MATHFUNCTIONS_H
+#define MATHFUNCTIONS_H
 
 #include <QtMath>
 #include <limits>
@@ -34,28 +34,19 @@ inline double squareRoot(double x) {
     return std::sqrt(x);
 }
 
-inline double square(double x) {
-    double result = x * x;
-    if (qIsInf(result)) {
-        return std::numeric_limits<double>::infinity();
-    }
-    return result;
-}
-
+inline double square(double x) { return x * x; }
 inline double reciprocal(double x) {
     if (qFuzzyIsNull(x))
         return std::numeric_limits<double>::quiet_NaN();
     return 1.0 / x;
 }
-
 inline double percent(double x) { return x * 0.01; }
 inline double changeSign(double x) { return -x; }
 inline double absolute(double x) { return std::fabs(x); }
 
-// Тригонометрические функции (в градусах)
+// Тригонометрические
 inline double sinDeg(double x) { return std::sin(qDegreesToRadians(x)); }
 inline double cosDeg(double x) { return std::cos(qDegreesToRadians(x)); }
-
 inline double tanDeg(double x) {
     double radians = qDegreesToRadians(x);
     if (qFuzzyCompare(std::cos(radians), 0.0))
@@ -63,70 +54,34 @@ inline double tanDeg(double x) {
     return std::tan(radians);
 }
 
-inline double ctan(double x) {
-    double radians = qDegreesToRadians(x);
-    if (qFuzzyCompare(std::sin(radians), 0.0))
-        return std::numeric_limits<double>::quiet_NaN();
-    return 1.0 / std::tan(radians);
-}
-
-// Логарифмические и экспоненциальные
+// Логарифмические
 inline double log10Func(double x) {
     if (x <= 0)
         return std::numeric_limits<double>::quiet_NaN();
     return std::log10(x);
 }
 
-inline double ln(double x) {
-    if (x <= 0)
-        return std::numeric_limits<double>::quiet_NaN();
-    return std::log(x);
-}
-
 inline double powerOf10(double x) { return std::pow(10.0, x); }
-
-// Факториал
-inline double factorial(int n) {
-    if (n < 0)
+inline double power(double base, double exponent) { 
+    if (qFuzzyIsNull(base) && exponent < 0)
         return std::numeric_limits<double>::quiet_NaN();
-    if (n > MAX_SHOWING_FACTORIAL)
-        return std::numeric_limits<double>::infinity();
-
-    double result = 1.0;
-    for (int i = 2; i <= n; ++i) {
-        result *= i;
-    }
-    return result;
+    return std::pow(base, exponent); 
 }
-
-// Возведение в степень
-inline double power(double base, double exponent) {
-    // Особый случай: 0^0
-    if (qFuzzyIsNull(base) && qFuzzyIsNull(exponent)) {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-    // Проверка для отрицательного основания и дробной степени
-    if (base < 0 && std::fmod(exponent, 1.0) != 0.0) {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-    // Проверка деления на ноль
-    if (qFuzzyIsNull(base) && exponent < 0) {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-    return std::pow(base, exponent);
-}
-
-// Остаток от деления
 inline double modulus(double a, double b) {
     if (qFuzzyIsNull(b))
         return std::numeric_limits<double>::quiet_NaN();
     return std::fmod(a, b);
 }
 
-// Функции для работы с выражениями (не inline, будут в .cpp)
+// Функции, которые будут в .cpp
+double lnFunc(double x);
+double ctanDeg(double x);
+double factorial(int n);
 double evaluateExpression(const QList<CalculationNode>& expr);
+
+// Вспомогательные
 int getPriority(const QString& op);
 double applyOperation(double a, double b, const QString& op);
 bool isMathOperator(const QString& token);
 
-#endif // MATHOPERATIONS_H
+#endif // MATHFUNCTIONS_H

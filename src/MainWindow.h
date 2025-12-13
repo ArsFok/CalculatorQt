@@ -2,15 +2,12 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QStackedWidget>
 
-// Forward declarations
 class QStackedWidget;
-class CalculatorBase;
-class ScientificCalculator;
-class ProgrammerCalculator;
+class QPushButton;
 class QButtonGroup;
-class QWidget;
+class QVBoxLayout;
+class QHBoxLayout;
 
 class Calculator : public QMainWindow
 {
@@ -25,15 +22,13 @@ private slots:
     void onStackedWidgetChanged(int index);
 
 private:
-    void createNavigation();
+    QLayout* createNavigation();
 
     QStackedWidget *m_stackedWidget;
-    CalculatorBase *m_basicCalculator;
-    ScientificCalculator *m_scientificCalculator;
-    ProgrammerCalculator *m_programmerCalculator;
-
+    QPushButton *m_basicButton;
+    QPushButton *m_scientificButton;
+    QPushButton *m_programmerButton;
     QButtonGroup *m_navButtonGroup;
-    QWidget *m_navContainer;
 };
 
 #endif // MAINWINDOW_H

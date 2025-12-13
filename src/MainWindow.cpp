@@ -2,145 +2,102 @@
 #include "calculatorbase.h"
 #include "scientificcalculator.h"
 #include "programmercalculator.h"
-#include "mybutton.h"
+#include <QStackedWidget>
+#include <QPushButton>
+#include <QButtonGroup>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QButtonGroup>
-#include <QStackedWidget>
 #include <QDebug>
 
 Calculator::Calculator(QWidget *parent)
-    : QMainWindow(parent),
-      m_stackedWidget(nullptr),
-      m_basicCalculator(nullptr),
-      m_scientificCalculator(nullptr),
-      m_programmerCalculator(nullptr),
-      m_navButtonGroup(nullptr)
+    : QMainWindow(parent)
 {
-    setWindowFlags(windowFlags() & ~Qt::FramelessWindowHint);
+    // Инициализация указателей
+    m_stackedWidget = nullptr;
+    m_basicButton = nullptr;
+    m_scientificButton = nullptr;
+    m_programmerButton = nullptr;
+    m_navButtonGroup = nullptr;
+
+    setWindowTitle("Калькулятор");
     setMinimumSize(600, 800);
 
-    setStyleSheet(
-         "QMainWindow {"
-         "   border: 5px solid #555555;"
-         "   border-radius: 5px;"
-         "   background: #f0f0f0;"
-         "}"
-    );
-
+    // Создаем центральный виджет
     QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
+    // Главный layout
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
     mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->setSpacing(10);
 
-    createNavigation();
-    mainLayout->addWidget(m_navContainer);
+    // Создаем навигацию
+    mainLayout->addLayout(createNavigation());
 
+    // Создаем stacked widget
     m_stackedWidget = new QStackedWidget();
     m_stackedWidget->setMinimumSize(580, 700);
     mainLayout->addWidget(m_stackedWidget);
 
-    m_basicCalculator = new CalculatorBase();
-    m_scientificCalculator = new ScientificCalculator();
-    m_programmerCalculator = new ProgrammerCalculator();
+    // Создаем калькуляторы
+    CalculatorBase *basicCalculator = new CalculatorBase();
+    ScientificCalculator *scientificCalculator = new ScientificCalculator();
+    ProgrammerCalculator *programmerCalculator = new ProgrammerCalculator();
 
-    m_stackedWidget->addWidget(m_basicCalculator);
-    m_stackedWidget->addWidget(m_scientificCalculator);
-    m_stackedWidget->addWidget(m_programmerCalculator);
+    // Инициализируем калькуляторы (после создания UI)
+    basicCalculator->initialize();
+    scientificCalculator->initialize();
+    programmerCalculator->initialize();
 
+    // Добавляем в stacked widget
+    m_stackedWidget->addWidget(basicCalculator);
+    m_stackedWidget->addWidget(scientificCalculator);
+    m_stackedWidget->addWidget(programmerCalculator);
+
+    // Подключаем сигналы
     connect(m_stackedWidget, &QStackedWidget::currentChanged,
             this, &Calculator::onStackedWidgetChanged);
 
+    // Устанавливаем начальный калькулятор
     m_stackedWidget->setCurrentIndex(0);
-    setWindowTitle("Калькулятор");
-
-    qDebug() << "Calculator initialized. Stacked widget count:" << m_stackedWidget->count();
+    if (m_basicButton) {
+        m_basicButton->setChecked(true);
+    }
 }
 
 Calculator::~Calculator()
 {
-    qDebug() << "Calculator destroyed";
+    // Qt автоматически удалит дочерние виджеты
 }
 
-void Calculator::switchPage()
+QLayout* Calculator::createNavigation()
 {
-    MyButton *button = qobject_cast<MyButton*>(sender());
-    if (!button) {
-        qDebug() << "Switch page: sender is not a MyButton";
-        return;
-    }
-
-    bool ok;
-    int pageIndex = button->property("pageIndex").toInt(&ok);
-
-    if (!ok) {
-        qDebug() << "Switch page: invalid pageIndex property";
-        return;
-    }
-
-    if (pageIndex >= 0 && pageIndex < m_stackedWidget->count()) {
-        qDebug() << "Switching to page:" << pageIndex;
-        m_stackedWidget->setCurrentIndex(pageIndex);
-
-        m_stackedWidget->update();
-        update();
-    } else {
-        qDebug() << "Invalid page index:" << pageIndex << "max:" << m_stackedWidget->count() - 1;
-    }
-}
-
-void Calculator::onStackedWidgetChanged(int index)
-{
-    qDebug() << "Stacked widget changed to index:" << index;
-
-    if (m_navButtonGroup) {
-        QAbstractButton *button = m_navButtonGroup->button(index);
-        if (button) {
-            button->setChecked(true);
-            qDebug() << "Set button" << index << "to checked";
-        }
-    }
-
-    update();
-}
-
-void Calculator::createNavigation()
-{
-    m_navContainer = new QWidget();
-    m_navContainer->setFixedHeight(50);
-
-    QHBoxLayout *navLayout = new QHBoxLayout(m_navContainer);
-    navLayout->setContentsMargins(0, 0, 0, 0);
+    QHBoxLayout *navLayout = new QHBoxLayout();
     navLayout->setSpacing(5);
 
+    // Создаем кнопки навигации
+    m_basicButton = new QPushButton("Обычный");
+    m_scientificButton = new QPushButton("Инженерный");
+    m_programmerButton = new QPushButton("Программист");
+
+    // Делаем их переключаемыми
+    m_basicButton->setCheckable(true);
+    m_scientificButton->setCheckable(true);
+    m_programmerButton->setCheckable(true);
+
+    // Группа для exclusive выбора
     m_navButtonGroup = new QButtonGroup(this);
     m_navButtonGroup->setExclusive(true);
+    m_navButtonGroup->addButton(m_basicButton, 0);
+    m_navButtonGroup->addButton(m_scientificButton, 1);
+    m_navButtonGroup->addButton(m_programmerButton, 2);
 
-    QVector<QPair<QString, int>> modes = {
-        {"Обычный", 0},
-        {"Инженерный", 1},
-        {"Программист", 2}
-    };
+    // Подключаем сигналы
+    connect(m_basicButton, &QPushButton::clicked, this, &Calculator::switchPage);
+    connect(m_scientificButton, &QPushButton::clicked, this, &Calculator::switchPage);
+    connect(m_programmerButton, &QPushButton::clicked, this, &Calculator::switchPage);
 
-    for (const auto& mode : modes) {
-        MyButton *btn = new MyButton(mode.first);
-        btn->setFixedSize(150, 40);
-        connect(btn, &MyButton::clicked, this, &Calculator::switchPage);
-        btn->setProperty("pageIndex", mode.second);
-        btn->setCheckable(true);
-        m_navButtonGroup->addButton(btn, mode.second);
-        navLayout->addWidget(btn);
-
-        qDebug() << "Created button:" << mode.first << "with pageIndex:" << mode.second;
-    }
-
-    if (!m_navButtonGroup->buttons().isEmpty()) {
-        m_navButtonGroup->button(0)->setChecked(true);
-        qDebug() << "Set initial button to checked";
-    }
-
+    // Стили для кнопок навигации
     QString buttonStyle =
         "QPushButton {"
         "   background-color: #e0e0e0;"
@@ -149,6 +106,8 @@ void Calculator::createNavigation()
         "   padding: 8px;"
         "   font-size: 14px;"
         "   font-weight: normal;"
+        "   min-width: 150px;"
+        "   min-height: 40px;"
         "}"
         "QPushButton:checked {"
         "   background-color: #87CEEB;"
@@ -163,8 +122,43 @@ void Calculator::createNavigation()
         "   background-color: #c0c0c0;"
         "}";
 
-    const auto buttons = m_navButtonGroup->buttons();
-    for (QAbstractButton *btn : buttons) {
-        btn->setStyleSheet(buttonStyle);
+    m_basicButton->setStyleSheet(buttonStyle);
+    m_scientificButton->setStyleSheet(buttonStyle);
+    m_programmerButton->setStyleSheet(buttonStyle);
+
+    // Добавляем кнопки в layout
+    navLayout->addWidget(m_basicButton);
+    navLayout->addWidget(m_scientificButton);
+    navLayout->addWidget(m_programmerButton);
+
+    return navLayout;
+}
+
+void Calculator::switchPage()
+{
+    QPushButton *button = qobject_cast<QPushButton*>(sender());
+    if (!button) return;
+
+    if (button == m_basicButton) {
+        m_stackedWidget->setCurrentIndex(0);
+    } else if (button == m_scientificButton) {
+        m_stackedWidget->setCurrentIndex(1);
+    } else if (button == m_programmerButton) {
+        m_stackedWidget->setCurrentIndex(2);
+    }
+}
+
+void Calculator::onStackedWidgetChanged(int index)
+{
+    switch (index) {
+    case 0:
+        if (m_basicButton) m_basicButton->setChecked(true);
+        break;
+    case 1:
+        if (m_scientificButton) m_scientificButton->setChecked(true);
+        break;
+    case 2:
+        if (m_programmerButton) m_programmerButton->setChecked(true);
+        break;
     }
 }

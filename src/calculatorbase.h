@@ -2,22 +2,22 @@
 #define CALCULATORBASE_H
 
 #include <QWidget>
-#include <QLineEdit>
-#include <QList>
-#include "mathoperations.h"
+#include "mathfunctions.h"
 
-// Forward declarations
-class MyButton;
-class QGridLayout;
-class QVBoxLayout;
+namespace Ui {
+class CalculatorBase;
+}
 
 class CalculatorBase : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit CalculatorBase(QWidget *parent = nullptr, bool setupDefaultUI = true);
-    virtual ~CalculatorBase() = default;
+    explicit CalculatorBase(QWidget *parent = nullptr);
+    virtual ~CalculatorBase();
+
+    // Метод для завершения инициализации
+    virtual void initialize();
 
 public slots:
     virtual void digitClicked();
@@ -40,19 +40,18 @@ public slots:
 
 protected:
     virtual void setupUI();
-    QLineEdit* createDisplay();
-    QLineEdit* createHistoryDisplay();
-    MyButton* createButton(const QString &text, const char *member);
-    bool calculate(double operand);
+    virtual void setupConnections();
+
+    QString formatNumberForDisplay(double value);
     void updateHistoryDisplay();
     void resetHistoryDisplay();
     virtual void updateExpressionWithCurrentNumber();
 
-    QString formatNumberForDisplay(double value);
+    virtual void handleDigitClick(QString digit);
+    virtual void handleOperatorClick(QString operation);
 
 protected:
-    QLineEdit *m_display;
-    QLineEdit *m_historyDisplay;
+    Ui::CalculatorBase *ui;
 
     double m_sum_in_memory;
     QString m_pending_operation;
@@ -63,9 +62,6 @@ protected:
     bool m_shouldUpdateHistory;
 
     QList<CalculationNode> m_expression;
-    MyButton *m_digitButtons[10];
-
-    bool m_uiInitialized;
 };
 
 #endif // CALCULATORBASE_H

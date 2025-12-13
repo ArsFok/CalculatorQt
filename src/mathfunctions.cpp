@@ -1,9 +1,34 @@
-#include "mathoperations.h"
+#include "mathfunctions.h"
 #include <QStack>
 #include <QDebug>
 #include <cmath>
 
-// Вспомогательные функции для вычисления выражений
+double lnFunc(double x) {
+    if (x <= 0)
+        return std::numeric_limits<double>::quiet_NaN();
+    return std::log(x);
+}
+
+double ctanDeg(double x) {
+    double radians = qDegreesToRadians(x);
+    if (qFuzzyCompare(std::sin(radians), 0.0))
+        return std::numeric_limits<double>::quiet_NaN();
+    return 1.0 / std::tan(radians);
+}
+
+double factorial(int n) {
+    if (n < 0)
+        return std::numeric_limits<double>::quiet_NaN();
+    if (n > MAX_SHOWING_FACTORIAL)
+        return std::numeric_limits<double>::infinity();
+        
+    double result = 1.0;
+    for (int i = 2; i <= n; ++i) {
+        result *= i;
+    }
+    return result;
+}
+
 int getPriority(const QString& op) {
     if (op == "(" || op == ")") return 0;
     if (op == "+" || op == "-") return 1;
@@ -27,10 +52,8 @@ bool isMathOperator(const QString& token) {
            token == "mod" || token == "^" || token == "(" || token == ")";
 }
 
-
 double evaluateExpression(const QList<CalculationNode>& expr) {
     if (expr.isEmpty()) {
-        qDebug() << "evaluateExpression: empty expression";
         return 0.0;
     }
 
@@ -75,7 +98,6 @@ double evaluateExpression(const QList<CalculationNode>& expr) {
                 if (!stack.isEmpty() && stack.top() == "(") {
                     stack.pop();
                 } else {
-                    qDebug() << "Mismatched parentheses";
                     return std::numeric_limits<double>::quiet_NaN();
                 }
             } else {
@@ -90,7 +112,6 @@ double evaluateExpression(const QList<CalculationNode>& expr) {
 
     while (!stack.isEmpty()) {
         if (stack.top() == "(") {
-            qDebug() << "Mismatched parentheses";
             return std::numeric_limits<double>::quiet_NaN();
         }
         output.append(stack.pop());
@@ -101,7 +122,6 @@ double evaluateExpression(const QList<CalculationNode>& expr) {
     for (const QString& token : output) {
         if (isMathOperator(token) && token != "(" && token != ")") {
             if (values.size() < 2) {
-                qDebug() << "Not enough values for operator:" << token;
                 return std::numeric_limits<double>::quiet_NaN();
             }
 
@@ -110,7 +130,6 @@ double evaluateExpression(const QList<CalculationNode>& expr) {
             double result = applyOperation(a, b, token);
 
             if (qIsNaN(result)) {
-                qDebug() << "Error in operation:" << a << token << b;
                 return result;
             }
 
@@ -119,7 +138,6 @@ double evaluateExpression(const QList<CalculationNode>& expr) {
             bool ok;
             double value = token.toDouble(&ok);
             if (!ok) {
-                qDebug() << "Invalid number:" << token;
                 return std::numeric_limits<double>::quiet_NaN();
             }
             values.push(value);
@@ -127,7 +145,6 @@ double evaluateExpression(const QList<CalculationNode>& expr) {
     }
 
     if (values.size() != 1) {
-        qDebug() << "Invalid expression - stack size:" << values.size();
         return std::numeric_limits<double>::quiet_NaN();
     }
 

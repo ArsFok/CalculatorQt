@@ -2,13 +2,10 @@
 #define SCIENTIFICCALCULATOR_H
 
 #include "calculatorbase.h"
-#include <QLineEdit>
-#include <QButtonGroup>
-#include <QRadioButton>
 
-// Forward declaration
-class QGridLayout;
-class QVBoxLayout;
+namespace Ui {
+class ScientificCalculator;
+}
 
 class ScientificCalculator : public CalculatorBase
 {
@@ -16,6 +13,10 @@ class ScientificCalculator : public CalculatorBase
 
 public:
     explicit ScientificCalculator(QWidget *parent = nullptr);
+    ~ScientificCalculator();
+
+    // Метод для завершения инициализации
+    void initialize() override;
 
 public slots:
     void sinClicked();
@@ -38,8 +39,12 @@ public slots:
     void leftParenClicked() override;
     void rightParenClicked() override;
 
+protected:
+    void setupUI() override;
+    void setupConnections() override;
+
 private:
-    void setupScientificUI();
+    Ui::ScientificCalculator *ui;
 };
 
 #endif // SCIENTIFICCALCULATOR_H
