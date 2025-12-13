@@ -50,6 +50,11 @@ protected:
 
     QString formatNumberForDisplay(double value);
 
+    // Разделенные функции setupUI
+    void createAllButtons();
+    void setupButtonStyles();
+    void arrangeButtonsInLayout(QGridLayout *buttonsLayout);
+
 protected:
     QLineEdit *m_display;
     QLineEdit *m_historyDisplay;
@@ -64,6 +69,28 @@ protected:
 
     QList<CalculationNode> m_expression;
     MyButton *m_digitButtons[10];
+
+    // Кнопки
+    MyButton *m_percentButton;
+    MyButton *m_pointButton;
+    MyButton *m_changeSignButton;
+    MyButton *m_backspaceButton;
+    MyButton *m_clearButton;
+    MyButton *m_clearAllButton;
+    MyButton *m_squareButton;
+    MyButton *m_powerButton;
+    MyButton *m_reciprocalButton;
+
+    MyButton *m_divisionButton;
+    MyButton *m_timesButton;
+    MyButton *m_minusButton;
+    MyButton *m_plusButton;
+    MyButton *m_equalButton;
+
+    MyButton *m_clearMemoryButton;
+    MyButton *m_readMemoryButton;
+    MyButton *m_addToMemoryButton;
+    MyButton *m_minToMemoryButton;
 
     bool m_uiInitialized;
 };

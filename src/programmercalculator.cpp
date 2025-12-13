@@ -52,33 +52,55 @@ void ProgrammerCalculator::setupProgrammerUI()
         "}"
     );
 
+    setupNumberSystemDisplays();
+    setupNumberSystemSelection();
+    createProgrammerButtons();
+    setupProgrammerButtonStyles();
+    arrangeProgrammerButtons();
+
+    updateNumberSystemDisplays();
+    updateNumberSystemButtons();
+
+    qDebug() << "Programmer Calculator UI setup complete";
+}
+
+void ProgrammerCalculator::setupNumberSystemDisplays()
+{
+    QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(layout());
+    if (!mainLayout) return;
+
     QGridLayout *displaysLayout = new QGridLayout();
     displaysLayout->setSpacing(5);
 
+    // BIN display
     QLabel *binLabel = new QLabel("BIN:");
     binLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
     m_display_bin = createDisplay();
     m_display_bin->setStyleSheet("font-size: 16px; background-color: #f5f5f5; padding: 5px;");
     m_display_bin->setReadOnly(true);
 
+    // OCT display
     QLabel *octLabel = new QLabel("OCT:");
     octLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
     m_display_oct = createDisplay();
     m_display_oct->setStyleSheet("font-size: 16px; background-color: #f5f5f5; padding: 5px;");
     m_display_oct->setReadOnly(true);
 
+    // DEC display
     QLabel *decLabel = new QLabel("DEC:");
     decLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
     m_display_dec = createDisplay();
     m_display_dec->setStyleSheet("font-size: 16px; background-color: #f5f5f5; padding: 5px;");
     m_display_dec->setReadOnly(true);
 
+    // HEX display
     QLabel *hexLabel = new QLabel("HEX:");
     hexLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
     m_display_hex = createDisplay();
     m_display_hex->setStyleSheet("font-size: 16px; background-color: #f5f5f5; padding: 5px;");
     m_display_hex->setReadOnly(true);
 
+    // Add to layout
     displaysLayout->addWidget(binLabel, 0, 0);
     displaysLayout->addWidget(m_display_bin, 0, 1);
     displaysLayout->addWidget(octLabel, 1, 0);
@@ -89,8 +111,15 @@ void ProgrammerCalculator::setupProgrammerUI()
     displaysLayout->addWidget(m_display_hex, 3, 1);
 
     mainLayout->addLayout(displaysLayout);
+}
+
+void ProgrammerCalculator::setupNumberSystemSelection()
+{
+    QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(layout());
+    if (!mainLayout) return;
 
     QButtonGroup *baseGroup = new QButtonGroup(this);
+
     QRadioButton *binRadio = new QRadioButton("BIN");
     QRadioButton *octRadio = new QRadioButton("OCT");
     QRadioButton *decRadio = new QRadioButton("DEC");
@@ -117,10 +146,12 @@ void ProgrammerCalculator::setupProgrammerUI()
 
     mainLayout->addLayout(baseLayout);
 
-    QGridLayout *programmerLayout = new QGridLayout();
-    programmerLayout->setSpacing(5);
-    programmerLayout->setContentsMargins(10, 10, 10, 10);
+    connect(baseGroup, SIGNAL(buttonClicked(QAbstractButton*)),
+            this, SLOT(onBaseGroupButtonClicked(QAbstractButton*)));
+}
 
+void ProgrammerCalculator::createProgrammerButtons()
+{
     // Создаем кнопки цифр с другим слотом
     for(int i = 0; i < 10; ++i) {
         m_digitButtons[i] = createButton(QString::number(i), SLOT(numberSystemDigitClicked()));
@@ -141,23 +172,10 @@ void ProgrammerCalculator::setupProgrammerUI()
     m_buttonD->setEnabled(false);
     m_buttonE->setEnabled(false);
     m_buttonF->setEnabled(false);
+}
 
-    // Остальные кнопки
-    MyButton *leftParenButton = createButton("(", SLOT(leftParenClicked()));
-    MyButton *rightParenButton = createButton(")", SLOT(rightParenClicked()));
-    MyButton *percentButton = createButton("%", SLOT(unaryOperatorClicked()));
-    MyButton *divisionButton = createButton("/", SLOT(doubleOperandClicked()));
-    MyButton *timesButton = createButton("×", SLOT(doubleOperandClicked()));
-    MyButton *minusButton = createButton("-", SLOT(doubleOperandClicked()));
-    MyButton *plusButton = createButton("+", SLOT(doubleOperandClicked()));
-    MyButton *equalButton = createButton("=", SLOT(equalClicked()));
-    MyButton *pointButton = createButton(",", SLOT(pointClicked()));
-    MyButton *changeSignButton = createButton("+/-", SLOT(changeSignClicked()));
-
-    MyButton *clearAllButton = createButton("CE", SLOT(clearAll()));
-    MyButton *clearButton = createButton("C", SLOT(clear()));
-    MyButton *backspaceButton = createButton("⌫", SLOT(backspaceClicked()));
-
+void ProgrammerCalculator::setupProgrammerButtonStyles()
+{
     QString digitButtonStyle =
         "QPushButton {"
         "   background-color: #87CEEB;"
@@ -222,7 +240,7 @@ void ProgrammerCalculator::setupProgrammerUI()
         "   background-color: #ff1493;"
         "}";
 
-    // Применяем стили
+    // Применяем стили к цифровым кнопкам
     for (int i = 0; i < 10; ++i) {
         m_digitButtons[i]->setStyleSheet(digitButtonStyle);
     }
@@ -233,10 +251,69 @@ void ProgrammerCalculator::setupProgrammerUI()
     m_buttonD->setStyleSheet(hexButtonStyle);
     m_buttonE->setStyleSheet(hexButtonStyle);
     m_buttonF->setStyleSheet(hexButtonStyle);
+}
 
+void ProgrammerCalculator::arrangeProgrammerButtons()
+{
+    QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(layout());
+    if (!mainLayout) return;
+
+    // Создаем остальные кнопки
+    MyButton *leftParenButton = createButton("(", SLOT(leftParenClicked()));
+    MyButton *rightParenButton = createButton(")", SLOT(rightParenClicked()));
+    MyButton *percentButton = createButton("%", SLOT(unaryOperatorClicked()));
+    MyButton *divisionButton = createButton("/", SLOT(doubleOperandClicked()));
+    MyButton *timesButton = createButton("×", SLOT(doubleOperandClicked()));
+    MyButton *minusButton = createButton("-", SLOT(doubleOperandClicked()));
+    MyButton *plusButton = createButton("+", SLOT(doubleOperandClicked()));
+    MyButton *equalButton = createButton("=", SLOT(equalClicked()));
+    MyButton *pointButton = createButton(",", SLOT(pointClicked()));
+    MyButton *changeSignButton = createButton("+/-", SLOT(changeSignClicked()));
+    MyButton *clearAllButton = createButton("CE", SLOT(clearAll()));
+    MyButton *clearButton = createButton("C", SLOT(clear()));
+    MyButton *backspaceButton = createButton("⌫", SLOT(backspaceClicked()));
+
+    QString operationButtonStyle =
+        "QPushButton {"
+        "   background-color: #ffa500;"
+        "   color: black;"
+        "   border: 2px solid #ff8c00;"
+        "   border-radius: 6px;"
+        "   font-size: 14px;"
+        "   font-weight: bold;"
+        "   min-width: 45px;"
+        "   min-height: 35px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #ff8c00;"
+        "   color: white;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #ff7f50;"
+        "}";
+
+    QString functionButtonStyle =
+        "QPushButton {"
+        "   background-color: #ffb6c1;"
+        "   color: black;"
+        "   border: 2px solid #ff69b4;"
+        "   border-radius: 6px;"
+        "   font-size: 14px;"
+        "   font-weight: bold;"
+        "   min-width: 45px;"
+        "   min-height: 35px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #ff69b4;"
+        "   color: white;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: #ff1493;"
+        "}";
+
+    // Применяем стили
     QList<MyButton*> operationButtons = {
-        divisionButton, timesButton, minusButton, plusButton, equalButton,
-        percentButton
+        divisionButton, timesButton, minusButton, plusButton, equalButton, percentButton
     };
     for (MyButton *btn : operationButtons) {
         btn->setStyleSheet(operationButtonStyle);
@@ -249,6 +326,10 @@ void ProgrammerCalculator::setupProgrammerUI()
     for (MyButton *btn : functionButtons) {
         btn->setStyleSheet(functionButtonStyle);
     }
+
+    QGridLayout *programmerLayout = new QGridLayout();
+    programmerLayout->setSpacing(5);
+    programmerLayout->setContentsMargins(10, 10, 10, 10);
 
     // Расположение кнопок
     programmerLayout->addWidget(m_buttonA, 0, 0);
@@ -287,17 +368,8 @@ void ProgrammerCalculator::setupProgrammerUI()
     programmerLayout->addWidget(equalButton, 5, 4);
 
     mainLayout->addLayout(programmerLayout);
-
-    // Подключаем смену системы счисления
-    connect(baseGroup, SIGNAL(buttonClicked(QAbstractButton*)),
-            this, SLOT(onBaseGroupButtonClicked(QAbstractButton*)));
-
-    // Инициализируем отображения
-    updateNumberSystemDisplays();
-    updateNumberSystemButtons();
-
-    qDebug() << "Programmer Calculator UI setup complete";
 }
+
 
 // Функции для скобок
 void ProgrammerCalculator::leftParenClicked()

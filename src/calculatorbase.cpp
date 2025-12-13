@@ -16,15 +16,19 @@ CalculatorBase::CalculatorBase(QWidget *parent, bool setupDefaultUI)
       m_uiInitialized(false)
 {
     qDebug() << "=== CalculatorBase constructor ===";
-    qDebug() << "Expression size in constructor start:" << m_expression.size();
 
     for (int i = 0; i < 10; ++i) {
         m_digitButtons[i] = nullptr;
     }
 
-    m_expression.clear();
+    // Инициализация всех указателей на кнопки
+    m_percentButton = m_pointButton = m_changeSignButton = m_backspaceButton =
+    m_clearButton = m_clearAllButton = m_squareButton = m_powerButton =
+    m_reciprocalButton = m_divisionButton = m_timesButton = m_minusButton =
+    m_plusButton = m_equalButton = m_clearMemoryButton = m_readMemoryButton =
+    m_addToMemoryButton = m_minToMemoryButton = nullptr;
 
-    qDebug() << "Expression size after clear:" << m_expression.size();
+    m_expression.clear();
 
     if (setupDefaultUI) {
         setupUI();
@@ -64,9 +68,67 @@ void CalculatorBase::setupUI()
     buttonsLayout->setSpacing(6);
     buttonsLayout->setContentsMargins(15, 15, 15, 15);
 
+    // Создаем все кнопки
+    createAllButtons();
+
+    // Настраиваем стили кнопок
+    setupButtonStyles();
+
+    // Располагаем кнопки в макете
+    arrangeButtonsInLayout(buttonsLayout);
+
+    mainLayout->addLayout(buttonsLayout);
+
+    for (int i = 0; i < 7; ++i) {
+        buttonsLayout->setRowStretch(i, 1);
+    }
+    for (int j = 0; j < 4; ++j) {
+        buttonsLayout->setColumnStretch(j, 1);
+    }
+
+    qDebug() << "CalculatorBase UI initialized";
+}
+
+void CalculatorBase::createAllButtons()
+{
+    qDebug() << "Creating all buttons...";
+
+    // Цифровые кнопки
     for(int i = 0; i < 10; ++i) {
         m_digitButtons[i] = createButton(QString::number(i), SLOT(digitClicked()));
+        qDebug() << "Created digit button:" << i;
     }
+
+    // Функциональные кнопки
+    m_percentButton = createButton("%", SLOT(unaryOperatorClicked()));
+    m_pointButton = createButton(".", SLOT(pointClicked()));
+    m_changeSignButton = createButton("±", SLOT(changeSignClicked()));
+    m_backspaceButton = createButton("⌫", SLOT(backspaceClicked()));
+    m_clearButton = createButton("C", SLOT(clear()));
+    m_clearAllButton = createButton("CE", SLOT(clearAll()));
+    m_squareButton = createButton("√", SLOT(unaryOperatorClicked()));
+    m_powerButton = createButton("x²", SLOT(unaryOperatorClicked()));
+    m_reciprocalButton = createButton("1/x", SLOT(unaryOperatorClicked()));
+
+    // Операторные кнопки
+    m_divisionButton = createButton("÷", SLOT(doubleOperandClicked()));
+    m_timesButton = createButton("×", SLOT(doubleOperandClicked()));
+    m_minusButton = createButton("-", SLOT(doubleOperandClicked()));
+    m_plusButton = createButton("+", SLOT(doubleOperandClicked()));
+    m_equalButton = createButton("=", SLOT(equalClicked()));
+
+    // Кнопки памяти
+    m_clearMemoryButton = createButton("MC", SLOT(clearMemory()));
+    m_readMemoryButton = createButton("MR", SLOT(readMemory()));
+    m_addToMemoryButton = createButton("M+", SLOT(addToMemory()));
+    m_minToMemoryButton = createButton("M-", SLOT(minToMemory()));
+
+    qDebug() << "All buttons created successfully";
+}
+
+void CalculatorBase::setupButtonStyles()
+{
+    qDebug() << "Setting up button styles...";
 
     QString digitButtonStyle =
         "QPushButton {"
@@ -125,95 +187,87 @@ void CalculatorBase::setupUI()
         "   background-color: #ff7f50;"
         "}";
 
+    // Применяем стили к цифровым кнопкам
     for (int i = 0; i < 10; ++i) {
-        m_digitButtons[i]->setStyleSheet(digitButtonStyle);
+        if (m_digitButtons[i]) {
+            m_digitButtons[i]->setStyleSheet(digitButtonStyle);
+        }
     }
 
-    MyButton *percentButton = createButton("%", SLOT(unaryOperatorClicked()));
-    MyButton *pointButton = createButton(".", SLOT(pointClicked()));
-    MyButton *changeSignButton = createButton("±", SLOT(changeSignClicked()));
-    MyButton *backspaceButton = createButton("⌫", SLOT(backspaceClicked()));
-    MyButton *clearButton = createButton("C", SLOT(clear()));
-    MyButton *clearAllButton = createButton("CE", SLOT(clearAll()));
-
-    MyButton *divisionButton = createButton("÷", SLOT(doubleOperandClicked()));
-    MyButton *timesButton = createButton("×", SLOT(doubleOperandClicked()));
-    MyButton *minusButton = createButton("-", SLOT(doubleOperandClicked()));
-    MyButton *plusButton = createButton("+", SLOT(doubleOperandClicked()));
-
-    MyButton *squareButton = createButton("√", SLOT(unaryOperatorClicked()));
-    MyButton *powerButton = createButton("x²", SLOT(unaryOperatorClicked()));
-    MyButton *reciprocalButton = createButton("1/x", SLOT(unaryOperatorClicked()));
-    MyButton *equalButton = createButton("=", SLOT(equalClicked()));
-
-    MyButton *clearMemoryButton = createButton("MC", SLOT(clearMemory()));
-    MyButton *readMemoryButton = createButton("MR", SLOT(readMemory()));
-    MyButton *addToMemoryButton = createButton("M+", SLOT(addToMemory()));
-    MyButton *minToMemoryButton = createButton("M-", SLOT(minToMemory()));
-
+    // Применяем стили к функциональным кнопкам
     QList<MyButton*> functionButtons = {
-        percentButton, pointButton, changeSignButton, backspaceButton,
-        clearButton, clearAllButton, squareButton, powerButton, reciprocalButton,
-        clearMemoryButton, readMemoryButton, addToMemoryButton, minToMemoryButton
+        m_percentButton, m_pointButton, m_changeSignButton, m_backspaceButton,
+        m_clearButton, m_clearAllButton, m_squareButton, m_powerButton, m_reciprocalButton,
+        m_clearMemoryButton, m_readMemoryButton, m_addToMemoryButton, m_minToMemoryButton
     };
 
     for (MyButton *btn : functionButtons) {
-        btn->setStyleSheet(functionButtonStyle);
+        if (btn) {
+            btn->setStyleSheet(functionButtonStyle);
+        }
     }
 
+    // Применяем стили к операторным кнопкам
     QList<MyButton*> operationButtons = {
-        divisionButton, timesButton, minusButton, plusButton, equalButton
+        m_divisionButton, m_timesButton, m_minusButton, m_plusButton, m_equalButton
     };
 
     for (MyButton *btn : operationButtons) {
-        btn->setStyleSheet(operationButtonStyle);
+        if (btn) {
+            btn->setStyleSheet(operationButtonStyle);
+        }
     }
 
-    buttonsLayout->addWidget(clearMemoryButton, 0, 0);
-    buttonsLayout->addWidget(readMemoryButton, 0, 1);
-    buttonsLayout->addWidget(addToMemoryButton, 0, 2);
-    buttonsLayout->addWidget(minToMemoryButton, 0, 3);
+    qDebug() << "Button styles applied";
+}
 
-    buttonsLayout->addWidget(percentButton, 1, 0);
-    buttonsLayout->addWidget(clearAllButton, 1, 1);
-    buttonsLayout->addWidget(clearButton, 1, 2);
-    buttonsLayout->addWidget(backspaceButton, 1, 3);
+void CalculatorBase::arrangeButtonsInLayout(QGridLayout *buttonsLayout)
+{
+    qDebug() << "Arranging buttons in layout...";
 
-    buttonsLayout->addWidget(squareButton, 2, 0);
-    buttonsLayout->addWidget(powerButton, 2, 1);
-    buttonsLayout->addWidget(reciprocalButton, 2, 2);
-    buttonsLayout->addWidget(divisionButton, 2, 3);
+    // Первый ряд: кнопки памяти
+    buttonsLayout->addWidget(m_clearMemoryButton, 0, 0);
+    buttonsLayout->addWidget(m_readMemoryButton, 0, 1);
+    buttonsLayout->addWidget(m_addToMemoryButton, 0, 2);
+    buttonsLayout->addWidget(m_minToMemoryButton, 0, 3);
 
+    // Второй ряд: функциональные кнопки
+    buttonsLayout->addWidget(m_percentButton, 1, 0);
+    buttonsLayout->addWidget(m_clearAllButton, 1, 1);
+    buttonsLayout->addWidget(m_clearButton, 1, 2);
+    buttonsLayout->addWidget(m_backspaceButton, 1, 3);
+
+    // Третий ряд: математические функции
+    buttonsLayout->addWidget(m_squareButton, 2, 0);
+    buttonsLayout->addWidget(m_powerButton, 2, 1);
+    buttonsLayout->addWidget(m_reciprocalButton, 2, 2);
+    buttonsLayout->addWidget(m_divisionButton, 2, 3);
+
+    // Четвертый ряд: 7, 8, 9, умножение
     buttonsLayout->addWidget(m_digitButtons[7], 3, 0);
     buttonsLayout->addWidget(m_digitButtons[8], 3, 1);
     buttonsLayout->addWidget(m_digitButtons[9], 3, 2);
-    buttonsLayout->addWidget(timesButton, 3, 3);
+    buttonsLayout->addWidget(m_timesButton, 3, 3);
 
+    // Пятый ряд: 4, 5, 6, вычитание
     buttonsLayout->addWidget(m_digitButtons[4], 4, 0);
     buttonsLayout->addWidget(m_digitButtons[5], 4, 1);
     buttonsLayout->addWidget(m_digitButtons[6], 4, 2);
-    buttonsLayout->addWidget(minusButton, 4, 3);
+    buttonsLayout->addWidget(m_minusButton, 4, 3);
 
+    // Шестой ряд: 1, 2, 3, сложение
     buttonsLayout->addWidget(m_digitButtons[1], 5, 0);
     buttonsLayout->addWidget(m_digitButtons[2], 5, 1);
     buttonsLayout->addWidget(m_digitButtons[3], 5, 2);
-    buttonsLayout->addWidget(plusButton, 5, 3);
+    buttonsLayout->addWidget(m_plusButton, 5, 3);
 
-    buttonsLayout->addWidget(changeSignButton, 6, 0);
+    // Седьмой ряд: смена знака, 0, точка, равно
+    buttonsLayout->addWidget(m_changeSignButton, 6, 0);
     buttonsLayout->addWidget(m_digitButtons[0], 6, 1);
-    buttonsLayout->addWidget(pointButton, 6, 2);
-    buttonsLayout->addWidget(equalButton, 6, 3);
+    buttonsLayout->addWidget(m_pointButton, 6, 2);
+    buttonsLayout->addWidget(m_equalButton, 6, 3);
 
-    mainLayout->addLayout(buttonsLayout);
-
-    for (int i = 0; i < 7; ++i) {
-        buttonsLayout->setRowStretch(i, 1);
-    }
-    for (int j = 0; j < 4; ++j) {
-        buttonsLayout->setColumnStretch(j, 1);
-    }
-
-    qDebug() << "CalculatorBase UI initialized";
+    qDebug() << "Buttons arranged in layout";
 }
 
 QLineEdit* CalculatorBase::createHistoryDisplay()
@@ -300,13 +354,11 @@ void CalculatorBase::digitClicked()
         m_newCalculation = false;
         m_waiting_for_operand = false;
 
-
         updateExpressionWithCurrentNumber();
         updateHistoryDisplay();
 
         return;
     }
-
 
     // Если текущий текст "0", заменяем его
     if (currentText == "0" && digit != "0") {
@@ -325,8 +377,6 @@ void CalculatorBase::digitClicked()
     // Обновляем текущее число в выражении
     updateExpressionWithCurrentNumber();
     updateHistoryDisplay();
-
-
 }
 
 void CalculatorBase::pointClicked()
@@ -370,6 +420,7 @@ void CalculatorBase::pointClicked()
         updateHistoryDisplay();
     }
 }
+
 QString CalculatorBase::formatNumberForDisplay(double value)
 {
     if (qIsNaN(value) || qIsInf(value)) {
@@ -607,6 +658,7 @@ void CalculatorBase::unaryOperatorClicked()
     m_waiting_for_operand = false;
     m_newCalculation = true;
 }
+
 void CalculatorBase::doubleOperandClicked()
 {
     MyButton *clickedButton = qobject_cast<MyButton*>(sender());
@@ -768,6 +820,7 @@ void CalculatorBase::updateHistoryDisplay()
         m_historyDisplay->setText("0");
     }
 }
+
 void CalculatorBase::resetHistoryDisplay()
 {
     m_historyDisplay->setText("0");
@@ -784,6 +837,7 @@ void CalculatorBase::readMemory()
     m_display->setText(formatNumberForDisplay(m_sum_in_memory));
     m_waiting_for_operand = false;
 }
+
 void CalculatorBase::addToMemory()
 {
     bool ok;

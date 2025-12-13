@@ -44,6 +44,14 @@ protected:
     void updateExpressionWithCurrentNumber() override;
 
 private:
+    // Разделенные функции для setupProgrammerUI
+    void setupNumberSystemDisplays();
+    void setupNumberSystemSelection();
+    void createProgrammerButtons();
+    void setupProgrammerButtonStyles();
+    void arrangeProgrammerButtons();
+
+private:
     int m_current_base;
     QLineEdit *m_display_bin;
     QLineEdit *m_display_oct;

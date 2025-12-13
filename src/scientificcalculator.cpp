@@ -6,9 +6,17 @@
 #include <QLabel>
 
 ScientificCalculator::ScientificCalculator(QWidget *parent)
-    : CalculatorBase(parent, false)
+    : CalculatorBase(parent, false),
+      m_sinButton(nullptr), m_cosButton(nullptr), m_tanButton(nullptr), m_ctanButton(nullptr),
+      m_piButton(nullptr), m_logButton(nullptr), m_lnButton(nullptr), m_powerButton(nullptr),
+      m_tenPowerButton(nullptr), m_eButton(nullptr), m_factorialButton(nullptr),
+      m_sqrtButton(nullptr), m_squareButton(nullptr), m_reciprocalButton(nullptr),
+      m_absButton(nullptr), m_leftParenButton(nullptr), m_rightParenButton(nullptr),
+      m_modButton(nullptr), m_percentButton(nullptr), m_divisionButton(nullptr),
+      m_timesButton(nullptr), m_minusButton(nullptr), m_plusButton(nullptr),
+      m_equalButton(nullptr), m_pointButton(nullptr), m_changeSignButton(nullptr),
+      m_backspaceButton(nullptr), m_clearButton(nullptr), m_clearAllButton(nullptr)
 {
-
     m_expression.clear();
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(10, 10, 10, 10);
@@ -46,10 +54,6 @@ void ScientificCalculator::setupScientificUI()
         return;
     }
 
-    QGridLayout *scientificLayout = new QGridLayout();
-    scientificLayout->setSpacing(5);
-    scientificLayout->setContentsMargins(5, 5, 5, 5);
-
     // Очищаем существующие кнопки цифр, если они есть
     for(int i = 0; i < 10; ++i) {
         if (m_digitButtons[i]) {
@@ -63,6 +67,48 @@ void ScientificCalculator::setupScientificUI()
         m_digitButtons[i] = createButton(QString::number(i), SLOT(digitClicked()));
     }
 
+    createScientificButtons();
+    setupScientificButtonStyles();
+    arrangeScientificButtons();
+
+    qDebug() << "Scientific Calculator UI setup complete";
+}
+
+void ScientificCalculator::createScientificButtons()
+{
+    m_sinButton = createButton("sin", SLOT(sinClicked()));
+    m_cosButton = createButton("cos", SLOT(cosClicked()));
+    m_tanButton = createButton("tan", SLOT(tanClicked()));
+    m_ctanButton = createButton("ctan", SLOT(ctanClicked()));
+    m_piButton = createButton("π", SLOT(piClicked()));
+    m_logButton = createButton("log", SLOT(logClicked()));
+    m_lnButton = createButton("ln", SLOT(lnClicked()));
+    m_powerButton = createButton("x^y", SLOT(powerClicked()));
+    m_tenPowerButton = createButton("10^x", SLOT(TenInXClicked()));
+    m_eButton = createButton("e", SLOT(eClicked()));
+    m_factorialButton = createButton("n!", SLOT(factorialClicked()));
+    m_sqrtButton = createButton("√", SLOT(unaryOperatorClicked()));
+    m_squareButton = createButton("x²", SLOT(unaryOperatorClicked()));
+    m_reciprocalButton = createButton("1/x", SLOT(unaryOperatorClicked()));
+    m_absButton = createButton("|x|", SLOT(modulClicked()));
+    m_leftParenButton = createButton("(", SLOT(leftParenClicked()));
+    m_rightParenButton = createButton(")", SLOT(rightParenClicked()));
+    m_modButton = createButton("mod", SLOT(modClicked()));
+    m_percentButton = createButton("%", SLOT(unaryOperatorClicked()));
+    m_divisionButton = createButton("÷", SLOT(doubleOperandClicked()));
+    m_timesButton = createButton("×", SLOT(doubleOperandClicked()));
+    m_minusButton = createButton("-", SLOT(doubleOperandClicked()));
+    m_plusButton = createButton("+", SLOT(doubleOperandClicked()));
+    m_equalButton = createButton("=", SLOT(equalClicked()));
+    m_pointButton = createButton(".", SLOT(pointClicked()));
+    m_changeSignButton = createButton("±", SLOT(changeSignClicked()));
+    m_backspaceButton = createButton("⌫", SLOT(backspaceClicked()));
+    m_clearButton = createButton("C", SLOT(clear()));
+    m_clearAllButton = createButton("CE", SLOT(clearAll()));
+}
+
+void ScientificCalculator::setupScientificButtonStyles()
+{
     QString scientificButtonStyle =
         "QPushButton {"
         "   background-color: #98fb98;"
@@ -81,40 +127,6 @@ void ScientificCalculator::setupScientificUI()
         "QPushButton:pressed {"
         "   background-color: #228b22;"
         "}";
-
-    MyButton *sinButton = createButton("sin", SLOT(sinClicked()));
-    MyButton *cosButton = createButton("cos", SLOT(cosClicked()));
-    MyButton *tanButton = createButton("tan", SLOT(tanClicked()));
-    MyButton *ctanButton = createButton("ctan", SLOT(ctanClicked()));
-    MyButton *piButton = createButton("π", SLOT(piClicked()));
-
-    MyButton *logButton = createButton("log", SLOT(logClicked()));
-    MyButton *lnButton = createButton("ln", SLOT(lnClicked()));
-    MyButton *powerButton = createButton("x^y", SLOT(powerClicked()));
-    MyButton *tenPowerButton = createButton("10^x", SLOT(TenInXClicked()));
-    MyButton *eButton = createButton("e", SLOT(eClicked()));
-
-    MyButton *factorialButton = createButton("n!", SLOT(factorialClicked()));
-    MyButton *sqrtButton = createButton("√", SLOT(unaryOperatorClicked()));
-    MyButton *squareButton = createButton("x²", SLOT(unaryOperatorClicked()));
-    MyButton *reciprocalButton = createButton("1/x", SLOT(unaryOperatorClicked()));
-    MyButton *absButton = createButton("|x|", SLOT(modulClicked()));
-
-    MyButton *leftParenButton = createButton("(", SLOT(leftParenClicked()));
-    MyButton *rightParenButton = createButton(")", SLOT(rightParenClicked()));
-    MyButton *modButton = createButton("mod", SLOT(modClicked()));
-    MyButton *percentButton = createButton("%", SLOT(unaryOperatorClicked()));
-
-    QList<MyButton*> scientificButtons = {
-        sinButton, cosButton, tanButton, ctanButton, piButton,
-        logButton, lnButton, powerButton, tenPowerButton, eButton,
-        factorialButton, sqrtButton, squareButton, reciprocalButton, absButton,
-        leftParenButton, rightParenButton, modButton, percentButton
-    };
-
-    for (MyButton *btn : scientificButtons) {
-        btn->setStyleSheet(scientificButtonStyle);
-    }
 
     QString operationButtonStyle =
         "QPushButton {"
@@ -135,20 +147,6 @@ void ScientificCalculator::setupScientificUI()
         "   background-color: #ff7f50;"
         "}";
 
-    MyButton *divisionButton = createButton("÷", SLOT(doubleOperandClicked()));
-    MyButton *timesButton = createButton("×", SLOT(doubleOperandClicked()));
-    MyButton *minusButton = createButton("-", SLOT(doubleOperandClicked()));
-    MyButton *plusButton = createButton("+", SLOT(doubleOperandClicked()));
-    MyButton *equalButton = createButton("=", SLOT(equalClicked()));
-
-    QList<MyButton*> operationButtons = {
-        divisionButton, timesButton, minusButton, plusButton, equalButton
-    };
-
-    for (MyButton *btn : operationButtons) {
-        btn->setStyleSheet(operationButtonStyle);
-    }
-
     QString digitButtonStyle =
         "QPushButton {"
         "   background-color: #87CEEB;"
@@ -167,10 +165,6 @@ void ScientificCalculator::setupScientificUI()
         "QPushButton:pressed {"
         "   background-color: #4169e1;"
         "}";
-
-    for (int i = 0; i < 10; ++i) {
-        m_digitButtons[i]->setStyleSheet(digitButtonStyle);
-    }
 
     QString functionButtonStyle =
         "QPushButton {"
@@ -191,71 +185,111 @@ void ScientificCalculator::setupScientificUI()
         "   background-color: #ff1493;"
         "}";
 
-    MyButton *pointButton = createButton(".", SLOT(pointClicked()));
-    MyButton *changeSignButton = createButton("±", SLOT(changeSignClicked()));
-    MyButton *backspaceButton = createButton("⌫", SLOT(backspaceClicked()));
-    MyButton *clearButton = createButton("C", SLOT(clear()));
-    MyButton *clearAllButton = createButton("CE", SLOT(clearAll()));
+    // Применяем стили к научным кнопкам
+    QList<MyButton*> scientificButtons = {
+        m_sinButton, m_cosButton, m_tanButton, m_ctanButton, m_piButton,
+        m_logButton, m_lnButton, m_powerButton, m_tenPowerButton, m_eButton,
+        m_factorialButton, m_sqrtButton, m_squareButton, m_reciprocalButton, m_absButton,
+        m_leftParenButton, m_rightParenButton, m_modButton, m_percentButton
+    };
 
+    for (MyButton *btn : scientificButtons) {
+        if (btn) btn->setStyleSheet(scientificButtonStyle);
+    }
+
+    // Применяем стили к операторным кнопкам
+    QList<MyButton*> operationButtons = {
+        m_divisionButton, m_timesButton, m_minusButton, m_plusButton, m_equalButton
+    };
+
+    for (MyButton *btn : operationButtons) {
+        if (btn) btn->setStyleSheet(operationButtonStyle);
+    }
+
+    // Применяем стили к цифровым кнопкам
+    for (int i = 0; i < 10; ++i) {
+        if (m_digitButtons[i]) {
+            m_digitButtons[i]->setStyleSheet(digitButtonStyle);
+        }
+    }
+
+    // Применяем стили к функциональным кнопкам
     QList<MyButton*> functionButtons = {
-        pointButton, changeSignButton, backspaceButton, clearButton, clearAllButton
+        m_pointButton, m_changeSignButton, m_backspaceButton, m_clearButton, m_clearAllButton
     };
 
     for (MyButton *btn : functionButtons) {
-        btn->setStyleSheet(functionButtonStyle);
+        if (btn) btn->setStyleSheet(functionButtonStyle);
     }
+}
 
-    scientificLayout->addWidget(sinButton, 0, 0);
-    scientificLayout->addWidget(cosButton, 0, 1);
-    scientificLayout->addWidget(tanButton, 0, 2);
-    scientificLayout->addWidget(ctanButton, 0, 3);
-    scientificLayout->addWidget(piButton, 0, 4);
+void ScientificCalculator::arrangeScientificButtons()
+{
+    QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(layout());
+    if (!mainLayout) return;
 
-    scientificLayout->addWidget(logButton, 1, 0);
-    scientificLayout->addWidget(lnButton, 1, 1);
-    scientificLayout->addWidget(powerButton, 1, 2);
-    scientificLayout->addWidget(tenPowerButton, 1, 3);
-    scientificLayout->addWidget(eButton, 1, 4);
+    QGridLayout *scientificLayout = new QGridLayout();
+    scientificLayout->setSpacing(5);
+    scientificLayout->setContentsMargins(5, 5, 5, 5);
 
-    scientificLayout->addWidget(factorialButton, 2, 0);
-    scientificLayout->addWidget(sqrtButton, 2, 1);
-    scientificLayout->addWidget(squareButton, 2, 2);
-    scientificLayout->addWidget(reciprocalButton, 2, 3);
-    scientificLayout->addWidget(absButton, 2, 4);
+    // Первый ряд
+    scientificLayout->addWidget(m_sinButton, 0, 0);
+    scientificLayout->addWidget(m_cosButton, 0, 1);
+    scientificLayout->addWidget(m_tanButton, 0, 2);
+    scientificLayout->addWidget(m_ctanButton, 0, 3);
+    scientificLayout->addWidget(m_piButton, 0, 4);
 
-    scientificLayout->addWidget(leftParenButton, 3, 0);
-    scientificLayout->addWidget(rightParenButton, 3, 1);
-    scientificLayout->addWidget(modButton, 3, 2);
-    scientificLayout->addWidget(percentButton, 3, 3);
-    scientificLayout->addWidget(divisionButton, 3, 4);
+    // Второй ряд
+    scientificLayout->addWidget(m_logButton, 1, 0);
+    scientificLayout->addWidget(m_lnButton, 1, 1);
+    scientificLayout->addWidget(m_powerButton, 1, 2);
+    scientificLayout->addWidget(m_tenPowerButton, 1, 3);
+    scientificLayout->addWidget(m_eButton, 1, 4);
 
+    // Третий ряд
+    scientificLayout->addWidget(m_factorialButton, 2, 0);
+    scientificLayout->addWidget(m_sqrtButton, 2, 1);
+    scientificLayout->addWidget(m_squareButton, 2, 2);
+    scientificLayout->addWidget(m_reciprocalButton, 2, 3);
+    scientificLayout->addWidget(m_absButton, 2, 4);
+
+    // Четвертый ряд
+    scientificLayout->addWidget(m_leftParenButton, 3, 0);
+    scientificLayout->addWidget(m_rightParenButton, 3, 1);
+    scientificLayout->addWidget(m_modButton, 3, 2);
+    scientificLayout->addWidget(m_percentButton, 3, 3);
+    scientificLayout->addWidget(m_divisionButton, 3, 4);
+
+    // Пятый ряд
     scientificLayout->addWidget(m_digitButtons[7], 4, 0);
     scientificLayout->addWidget(m_digitButtons[8], 4, 1);
     scientificLayout->addWidget(m_digitButtons[9], 4, 2);
-    scientificLayout->addWidget(backspaceButton, 4, 3);
-    scientificLayout->addWidget(timesButton, 4, 4);
+    scientificLayout->addWidget(m_backspaceButton, 4, 3);
+    scientificLayout->addWidget(m_timesButton, 4, 4);
 
+    // Шестой ряд
     scientificLayout->addWidget(m_digitButtons[4], 5, 0);
     scientificLayout->addWidget(m_digitButtons[5], 5, 1);
     scientificLayout->addWidget(m_digitButtons[6], 5, 2);
-    scientificLayout->addWidget(minusButton, 5, 4);
-    scientificLayout->addWidget(clearAllButton, 5, 3);
+    scientificLayout->addWidget(m_clearAllButton, 5, 3);
+    scientificLayout->addWidget(m_minusButton, 5, 4);
 
+    // Седьмой ряд
     scientificLayout->addWidget(m_digitButtons[1], 6, 0);
     scientificLayout->addWidget(m_digitButtons[2], 6, 1);
     scientificLayout->addWidget(m_digitButtons[3], 6, 2);
-    scientificLayout->addWidget(clearButton, 6, 3);
-    scientificLayout->addWidget(plusButton, 6, 4);
+    scientificLayout->addWidget(m_clearButton, 6, 3);
+    scientificLayout->addWidget(m_plusButton, 6, 4);
 
-    scientificLayout->addWidget(changeSignButton, 7, 0);
+    // Восьмой ряд
+    scientificLayout->addWidget(m_changeSignButton, 7, 0);
     scientificLayout->addWidget(m_digitButtons[0], 7, 1);
-    scientificLayout->addWidget(pointButton, 7, 2);
-    scientificLayout->addWidget(equalButton, 7, 3, 1, 2);
+    scientificLayout->addWidget(m_pointButton, 7, 2);
+    scientificLayout->addWidget(m_equalButton, 7, 3, 1, 2);
 
     mainLayout->addLayout(scientificLayout);
-
-    qDebug() << "Scientific Calculator UI setup complete";
 }
+
 
 void ScientificCalculator::sinClicked()
 {

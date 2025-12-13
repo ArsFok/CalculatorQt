@@ -40,6 +40,43 @@ public slots:
 
 private:
     void setupScientificUI();
+
+    // Разделенные функции setupScientificUI
+    void createScientificButtons();
+    void setupScientificButtonStyles();
+    void arrangeScientificButtons();
+
+private:
+    // Кнопки для научных функций
+    MyButton *m_sinButton;
+    MyButton *m_cosButton;
+    MyButton *m_tanButton;
+    MyButton *m_ctanButton;
+    MyButton *m_piButton;
+    MyButton *m_logButton;
+    MyButton *m_lnButton;
+    MyButton *m_powerButton;
+    MyButton *m_tenPowerButton;
+    MyButton *m_eButton;
+    MyButton *m_factorialButton;
+    MyButton *m_sqrtButton;
+    MyButton *m_squareButton;
+    MyButton *m_reciprocalButton;
+    MyButton *m_absButton;
+    MyButton *m_leftParenButton;
+    MyButton *m_rightParenButton;
+    MyButton *m_modButton;
+    MyButton *m_percentButton;
+    MyButton *m_divisionButton;
+    MyButton *m_timesButton;
+    MyButton *m_minusButton;
+    MyButton *m_plusButton;
+    MyButton *m_equalButton;
+    MyButton *m_pointButton;
+    MyButton *m_changeSignButton;
+    MyButton *m_backspaceButton;
+    MyButton *m_clearButton;
+    MyButton *m_clearAllButton;
 };
 
 #endif // SCIENTIFICCALCULATOR_H
